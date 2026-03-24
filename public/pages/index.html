@@ -183,10 +183,18 @@ a{text-decoration:none;color:inherit}
   .logo-fixed{top:12px;left:12px}
   .logo-fixed img{width:48px;height:48px}
 }
+.transition-out .page-content,.transition-out .logo-fixed,.transition-out .border-frame{transition:opacity .8s ease,transform .8s ease;opacity:0!important;transform:translateY(-20px)!important}
+.transition-out .hero-fade{opacity:0!important}
+.page-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#030305;z-index:9999;opacity:0;pointer-events:none;transition:opacity .8s ease}
+.page-overlay.active{opacity:1;pointer-events:all}
+.page-arrival{position:fixed;top:0;left:0;width:100%;height:100%;background:#030305;z-index:9998;animation:arrivalFade 1s ease .1s forwards;pointer-events:none}
+@keyframes arrivalFade{from{opacity:1}to{opacity:0}}
 </style>
 </head>
 <body>
 
+<div class="page-arrival"></div>
+<div class="page-overlay" id="pageOverlay"></div>
 <div class="border-frame"></div>
 <div class="logo-fixed"><img src="https://i.ibb.co/nMFjJgcZ/logo-png.png" alt="Path Engine"></div>
 <div id="orb-container"></div>
@@ -204,8 +212,8 @@ a{text-decoration:none;color:inherit}
       </div>
       <p class="hero-sub">AI analyzes your skills, goals, and learning style — then builds a roadmap that's uniquely yours.</p>
       <div class="hero-buttons">
-        <button class="btn-primary">Start Your Journey</button>
-        <button class="btn-secondary">See How It Works</button>
+        <button class="btn-primary" onclick="navigateWithTransition('/pages/auth.html')">Start Your Journey</button>
+        <button class="btn-secondary" onclick="document.querySelector('.how-section').scrollIntoView({behavior:'smooth'})">See How It Works</button>
       </div>
     </div>
   </section>
@@ -334,7 +342,7 @@ a{text-decoration:none;color:inherit}
     <div class="cta-box">
       <h2>Ready to find<br><span class="grad">your path?</span></h2>
       <p>Take the assessment. Let AI build your roadmap.<br>Start learning smarter — not harder.</p>
-      <button class="btn-primary" style="font-size:16px;padding:16px 44px">Begin Assessment</button>
+      <button class="btn-primary" style="font-size:16px;padding:16px 44px" onclick="navigateWithTransition('/pages/auth.html')">Begin Assessment</button>
     </div>
   </div>
 
@@ -599,6 +607,35 @@ a{text-decoration:none;color:inherit}
   }
   animateLetters('word1','PATH',0.4);
   animateLetters('word2','ENGINE',0.75);
+
+  /* Page transition - super smooth morph */
+  window.navigateWithTransition=function(url){
+    document.body.classList.add('transition-out');
+    var overlay=document.getElementById('pageOverlay');
+    var orbEnd=-eX()*0.35;
+    var sStart=curS;
+    var xStart=curX;
+    var startTime=performance.now();
+    var duration=2000;
+    var contentFadeDone=false;
+    function morphOrb(now){
+      var elapsed=now-startTime;
+      var p=Math.min(elapsed/duration,1);
+      var ease=p<0.5?4*p*p*p:(1-Math.pow(-2*p+2,3)/2);
+      targetX=xStart+(orbEnd-xStart)*ease;
+      targetS=sStart+(1.1-sStart)*ease;
+      if(p>0.65&&!contentFadeDone){
+        overlay.classList.add('active');
+        contentFadeDone=true;
+      }
+      if(p<1){
+        requestAnimationFrame(morphOrb);
+      }else{
+        setTimeout(function(){window.location.href=url},700);
+      }
+    }
+    requestAnimationFrame(morphOrb);
+  };
 })();
 </script>
 </body>
