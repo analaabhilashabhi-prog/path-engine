@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Path Engine — Powered by AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg-void:#030305;
+  --bg-deep:#060608;
+  --bg-card:#0a0a0f;
+  --bg-elevated:#111118;
+  --bg-hover:#1a1a24;
+  --accent:#10b981;
+  --accent-light:#34d399;
+  --accent-bright:#6ee7b7;
+  --accent-dim:rgba(16,185,129,0.06);
+  --accent-glow:rgba(16,185,129,0.15);
+  --text-1:#ffffff;
+  --text-2:rgba(255,255,255,0.45);
+  --text-3:rgba(255,255,255,0.2);
+  --border:rgba(255,255,255,0.06);
+  --border-hover:rgba(16,185,129,0.25);
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:16px;
+  --radius-xl:20px;
+  --frame:4px;
+}
+
+html{scrollbar-width:none;scroll-behavior:smooth}
+html::-webkit-scrollbar{display:none}
+body{background:var(--bg-void);color:var(--text-1);font-family:var(--font-body);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::-webkit-scrollbar{display:none}
+a{text-decoration:none;color:inherit}
+::selection{background:rgba(16,185,129,0.25);color:#fff}
+
+/* Border Frame */
+.border-frame{position:fixed;top:0;left:0;width:100%;height:100%;z-index:50;pointer-events:none;border:var(--frame) solid rgba(255,255,255,0.08)}
+.border-frame::after{content:'';position:absolute;inset:0;border:1px solid rgba(255,255,255,0.03)}
+
+/* Logo */
+.logo-fixed{position:fixed;top:24px;left:24px;z-index:100;opacity:0;animation:fadeIn .8s ease .3s forwards}
+.logo-fixed img{width:80px;height:80px;display:block}
+
+/* Orb */
+#orb-container{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:1;pointer-events:none}
+#orb-container canvas{pointer-events:auto}
+
+/* Content */
+.page-content{position:relative;z-index:2;padding:0 var(--frame)}
+
+/* Hero */
+.hero{min-height:100vh;position:relative;display:flex;align-items:center}
+.hero-inner{position:absolute;top:50%;left:clamp(48px,6vw,100px);transform:translateY(-50%)}
+.hero-tag{font-family:var(--font-mono);font-size:12px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;opacity:0;animation:fadeUp .6s ease .4s forwards}
+.hero-title{font-family:var(--font-display);font-weight:700;font-size:clamp(64px,10vw,150px);line-height:1;letter-spacing:-3px}
+.hero-title .line{display:block;overflow:hidden}
+.hero-title .line-inner{display:block;opacity:0;animation:lineReveal .7s ease forwards}
+.hero-title .line:nth-child(1) .line-inner{animation-delay:.3s}
+.hero-title .line:nth-child(2) .line-inner{animation-delay:.6s}
+.hero-sub{font-size:clamp(15px,1.8vw,18px);color:var(--text-2);max-width:420px;line-height:1.7;margin-top:24px;opacity:0;animation:fadeUp .8s ease 1.1s forwards}
+.hero-buttons{margin-top:32px;display:flex;gap:12px;flex-wrap:wrap;opacity:0;animation:fadeUp .8s ease 1.4s forwards}
+
+/* Hero Fade */
+.hero-fade{position:fixed;bottom:0;left:0;width:100%;height:35vh;z-index:3;background:linear-gradient(to top,var(--bg-void) 0%,var(--bg-void) 8%,transparent 100%);pointer-events:none;opacity:0;transition:opacity .4s ease}
+.hero-fade.active{opacity:1}
+
+/* Buttons */
+.btn-primary{padding:14px 36px;border-radius:var(--radius-sm);font-size:15px;font-weight:600;font-family:var(--font-body);background:var(--accent);color:var(--bg-void);border:none;cursor:pointer;transition:all .3s ease;position:relative;overflow:hidden}
+.btn-primary:hover{background:var(--accent-light);transform:translateY(-2px);box-shadow:0 0 40px rgba(16,185,129,0.2)}
+.btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%);transform:translateX(-100%);transition:transform .5s}
+.btn-primary:hover::after{transform:translateX(100%)}
+
+.btn-secondary{padding:14px 36px;border-radius:var(--radius-sm);font-size:15px;font-weight:600;font-family:var(--font-body);background:transparent;color:var(--text-2);border:1px solid var(--border);cursor:pointer;transition:all .3s ease}
+.btn-secondary:hover{border-color:rgba(255,255,255,0.15);color:var(--text-1);background:rgba(255,255,255,0.02)}
+
+/* Sections */
+.section-spacer{height:28vh}
+.section-glass{padding:56px 48px;margin:0 auto;max-width:1100px;background:rgba(255,255,255,0.01);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--border);border-radius:var(--radius-xl)}
+.section-tag{font-family:var(--font-mono);font-size:11px;color:var(--accent);font-weight:400;text-transform:uppercase;letter-spacing:3px;margin-bottom:14px}
+.section-title{font-family:var(--font-display);font-size:clamp(30px,4.5vw,46px);font-weight:700;line-height:1.15;margin-bottom:14px;letter-spacing:-1px}
+.section-sub{font-size:15px;color:var(--text-2);max-width:460px;line-height:1.7;margin-bottom:48px}
+.grad{background:linear-gradient(135deg,var(--accent),var(--accent-bright));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Feature Cards */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.glass-card{background:rgba(255,255,255,0.008);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;transition:all .4s cubic-bezier(.25,.46,.45,.94);opacity:0;transform:translateY(30px);position:relative;overflow:hidden}
+.glass-card.visible{opacity:1;transform:translateY(0)}
+.glass-card:hover{border-color:var(--border-hover);transform:translateY(-4px)}
+.glass-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.15),transparent);opacity:0;transition:opacity .4s}
+.glass-card:hover::before{opacity:1}
+.feature-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;background:var(--accent-dim);border:1px solid rgba(16,185,129,0.08);color:var(--accent);font-size:16px}
+.glass-card h3{font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:8px}
+.glass-card p{font-size:13px;color:var(--text-2);line-height:1.7}
+
+/* How It Works */
+.how-section{padding:80px 48px;text-align:center;max-width:1200px;margin:0 auto}
+.steps-container{display:flex;justify-content:center;align-items:flex-start;gap:0;margin-top:48px}
+.step{flex:1;max-width:280px;display:flex;flex-direction:column;align-items:center;padding:0 24px;opacity:0;transform:translateY(30px)}
+.step.visible{opacity:1;transform:translateY(0);transition:all .6s cubic-bezier(.25,.46,.45,.94)}
+.step:nth-child(2).visible{transition-delay:.15s}
+.step:nth-child(3).visible{transition-delay:.3s}
+.step:nth-child(4).visible{transition-delay:.2s}
+.step:nth-child(5).visible{transition-delay:.35s}
+.step-node{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;position:relative;margin-bottom:16px;background:rgba(255,255,255,0.01);border:1px solid var(--border);transition:all .5s ease}
+.step.visible .step-node{border-color:var(--border-hover);box-shadow:0 0 20px rgba(16,185,129,0.06)}
+.step-num{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--bg-void);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--font-display)}
+.step h3{font-family:var(--font-display);font-size:16px;font-weight:600;margin-bottom:6px}
+.step p{font-size:13px;color:var(--text-2);line-height:1.7}
+.step-connector{width:40px;height:1px;margin-top:26px;align-self:center;background:var(--accent);opacity:.08;flex-shrink:0}
+
+/* Stats */
+.stats-section{padding:80px 48px}
+.stats-grid{max-width:800px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center}
+.stat-item{opacity:0;transform:translateY(20px);padding:32px 16px;border-radius:var(--radius-lg);background:rgba(255,255,255,0.008);border:1px solid var(--border);transition:all .4s ease}
+.stat-item.visible{opacity:1;transform:translateY(0)}
+.stat-item:hover{border-color:var(--border-hover)}
+.stat-number{font-family:var(--font-display);font-size:clamp(34px,5vw,48px);font-weight:700;line-height:1;background:linear-gradient(135deg,var(--accent),var(--accent-bright));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:13px;color:var(--text-2);margin-top:6px;font-weight:400}
+
+/* Domain Tags */
+.domain-tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+.domain-tag{padding:8px 18px;border-radius:100px;font-size:12px;color:var(--text-2);font-weight:500;background:rgba(255,255,255,0.008);border:1px solid var(--border);transition:all .3s ease;opacity:0;transform:scale(.92)}
+.domain-tag.visible{opacity:1;transform:scale(1)}
+.domain-tag:hover{border-color:var(--border-hover);color:var(--accent);background:var(--accent-dim)}
+
+/* CTA */
+.cta-section{padding:100px 48px;text-align:center}
+.cta-box{max-width:600px;margin:0 auto;padding:56px 44px;border-radius:var(--radius-xl);background:rgba(255,255,255,0.008);border:1px solid var(--border);position:relative;overflow:hidden}
+.cta-box::before{content:'';position:absolute;top:-1px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.25),transparent)}
+.cta-box h2{font-family:var(--font-display);font-size:clamp(26px,4vw,36px);font-weight:700;margin-bottom:12px;letter-spacing:-0.5px}
+.cta-box p{font-size:15px;color:var(--text-2);margin-bottom:28px;line-height:1.7}
+
+/* Footer */
+.footer{padding:48px;text-align:center;border-top:1px solid var(--border)}
+.footer p{font-size:13px;color:var(--text-3);font-family:var(--font-body)}
+.footer a{color:var(--accent);transition:color .2s}
+.footer a:hover{color:var(--accent-light)}
+
+/* Animations */
+@keyframes lineReveal{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes letterIn{to{opacity:1;transform:translateY(0) rotateX(0deg)}}
+
+/* Letter animation */
+.hero-title span span{display:inline-block}
+
+/* Mobile */
+@media(max-width:768px){
+  :root{--frame:2px}
+  .logo-fixed{top:16px;left:16px}
+  .logo-fixed img{width:60px;height:60px}
+  .hero-inner{left:20px;right:20px;top:42%;transform:translateY(-50%)}
+  .hero-title{font-size:clamp(44px,13vw,80px)!important;letter-spacing:-1px}
+  .hero-sub{font-size:14px!important}
+  .hero-buttons{flex-direction:column;gap:10px;margin-top:24px}
+  .hero-buttons button{width:100%;padding:16px 24px}
+  .section-glass{padding:28px 18px;border-radius:var(--radius-lg)}
+  .section-title{font-size:clamp(24px,7vw,34px)!important}
+  .section-sub{font-size:14px!important}
+  .features-grid{grid-template-columns:1fr!important;gap:12px}
+  .how-section,.stats-section,.cta-section{padding:48px 18px}
+  .stats-grid{grid-template-columns:1fr;gap:12px}
+  .step-connector{display:none}
+  .steps-container{flex-direction:column;align-items:center;gap:24px}
+  .domain-tags{gap:8px}
+  .domain-tag{font-size:11px;padding:6px 14px}
+  .section-spacer{height:10vh}
+  .cta-box{padding:36px 22px}
+  .footer{padding:32px 18px}
+}
+@media(max-width:480px){
+  .hero-title{font-size:clamp(36px,12vw,56px)!important}
+  .hero-inner{top:36%}
+  .logo-fixed{top:12px;left:12px}
+  .logo-fixed img{width:48px;height:48px}
+}
+</style>
+</head>
+<body>
+
+<div class="border-frame"></div>
+<div class="logo-fixed"><img src="https://i.ibb.co/nMFjJgcZ/logo-png.png" alt="Path Engine"></div>
+<div id="orb-container"></div>
+<div class="hero-fade" id="heroFade"></div>
+
+<div class="page-content">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner" id="heroInner">
+      <div class="hero-tag">Powered by AI</div>
+      <div class="hero-title">
+        <span class="line"><span class="line-inner"><span id="word1"></span></span></span>
+        <span class="line"><span class="line-inner"><span id="word2"></span></span></span>
+      </div>
+      <p class="hero-sub">AI analyzes your skills, goals, and learning style — then builds a roadmap that's uniquely yours.</p>
+      <div class="hero-buttons">
+        <button class="btn-primary">Start Your Journey</button>
+        <button class="btn-secondary">See How It Works</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-spacer"></div>
+
+  <!-- WHY PATH ENGINE -->
+  <div class="section-glass">
+    <div class="section-tag">Why Path Engine</div>
+    <h2 class="section-title">Not another generic<br>learning platform.</h2>
+    <p class="section-sub">Every roadmap is uniquely generated by AI based on your actual skills, goals, and learning style.</p>
+    <div class="features-grid">
+      <div class="glass-card" data-anim="scroll">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <h3>AI-powered paths</h3>
+        <p>Claude AI generates a truly personalized learning roadmap — not a template everyone gets.</p>
+      </div>
+      <div class="glass-card" data-anim="scroll">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h3>5-layer assessment</h3>
+        <p>Self evaluation, skill quiz, goals survey, AI communication test, and ongoing tracking.</p>
+      </div>
+      <div class="glass-card" data-anim="scroll">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <h3>Adaptive progress</h3>
+        <p>Your roadmap evolves as you learn. AI adjusts difficulty, resources, and timeline in real-time.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-spacer"></div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-section">
+    <div class="section-tag">The Process</div>
+    <h2 class="section-title">Three steps to your<br><span class="grad">personalized path.</span></h2>
+    <div class="steps-container">
+      <div class="step" data-anim="scroll">
+        <div class="step-node">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <div class="step-num">1</div>
+        </div>
+        <h3>Take assessment</h3>
+        <p>Multi-layer skill assessment with quizzes, self-eval, and AI conversation.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-anim="scroll">
+        <div class="step-node">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <div class="step-num">2</div>
+        </div>
+        <h3>AI generates path</h3>
+        <p>Claude AI builds a hyper-personalized roadmap with real courses and resources.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-anim="scroll">
+        <div class="step-node">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          <div class="step-num">3</div>
+        </div>
+        <h3>Learn &amp; grow</h3>
+        <p>Track progress, earn badges, and watch your roadmap adapt to you.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-spacer"></div>
+
+  <!-- STATS -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-item" data-anim="scroll">
+        <div class="stat-number" data-count="10000">0</div>
+        <div class="stat-label">Students guided</div>
+      </div>
+      <div class="stat-item" data-anim="scroll">
+        <div class="stat-number" data-count="500">0</div>
+        <div class="stat-label">Courses mapped</div>
+      </div>
+      <div class="stat-item" data-anim="scroll">
+        <div class="stat-number" data-count="94">0</div>
+        <div class="stat-label">Success rate %</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-spacer"></div>
+
+  <!-- DOMAINS -->
+  <div class="section-glass">
+    <div class="section-tag">Supported Domains</div>
+    <h2 class="section-title">30+ domains.<br>Infinite paths.</h2>
+    <p class="section-sub">From web development to machine learning, cybersecurity to UI/UX design.</p>
+    <div class="domain-tags">
+      <span class="domain-tag" data-anim="scroll">Web Development</span>
+      <span class="domain-tag" data-anim="scroll">AI &amp; Machine Learning</span>
+      <span class="domain-tag" data-anim="scroll">Data Science</span>
+      <span class="domain-tag" data-anim="scroll">Mobile Apps</span>
+      <span class="domain-tag" data-anim="scroll">Cloud &amp; DevOps</span>
+      <span class="domain-tag" data-anim="scroll">Cybersecurity</span>
+      <span class="domain-tag" data-anim="scroll">Blockchain</span>
+      <span class="domain-tag" data-anim="scroll">UI/UX Design</span>
+      <span class="domain-tag" data-anim="scroll">Game Development</span>
+      <span class="domain-tag" data-anim="scroll">Digital Marketing</span>
+      <span class="domain-tag" data-anim="scroll">Product Management</span>
+      <span class="domain-tag" data-anim="scroll">Competitive Programming</span>
+      <span class="domain-tag" data-anim="scroll">Embedded &amp; IoT</span>
+      <span class="domain-tag" data-anim="scroll">Video Editing</span>
+      <span class="domain-tag" data-anim="scroll">3D &amp; Animation</span>
+      <span class="domain-tag" data-anim="scroll">GATE Prep</span>
+      <span class="domain-tag" data-anim="scroll">Business Analytics</span>
+      <span class="domain-tag" data-anim="scroll">Biotechnology</span>
+    </div>
+  </div>
+
+  <div class="section-spacer"></div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="cta-box">
+      <h2>Ready to find<br><span class="grad">your path?</span></h2>
+      <p>Take the assessment. Let AI build your roadmap.<br>Start learning smarter — not harder.</p>
+      <button class="btn-primary" style="font-size:16px;padding:16px 44px">Begin Assessment</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>Built with <a href="#">Path Engine</a> &mdash; Powered by AI &mdash; &copy; 2026</p>
+  </footer>
+
+</div>
+
+<!-- Three.js Orb -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var container=document.getElementById('orb-container');
+  var renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setClearColor(0x030305,1);
+  container.appendChild(renderer.domElement);
+
+  var frustumSize=14;
+  var aspect=window.innerWidth/window.innerHeight;
+  var camera=new THREE.OrthographicCamera(-frustumSize*aspect/2,frustumSize*aspect/2,frustumSize/2,-frustumSize/2,0.1,100);
+  camera.position.z=20;
+  var scene=new THREE.Scene();
+
+  var RADIUS=6.8,DOT_COUNT=5500;
+  var basePos=new Float32Array(DOT_COUNT*3),curPos=new Float32Array(DOT_COUNT*3);
+  var alphas=new Float32Array(DOT_COUNT),sizes=new Float32Array(DOT_COUNT);
+  var golden=(1+Math.sqrt(5))/2;
+
+  for(var i=0;i<DOT_COUNT;i++){
+    var theta=2*Math.PI*i/golden;
+    var phi=Math.acos(1-2*(i+0.5)/DOT_COUNT);
+    basePos[i*3]=RADIUS*Math.cos(theta)*Math.sin(phi);
+    basePos[i*3+1]=RADIUS*Math.sin(theta)*Math.sin(phi);
+    basePos[i*3+2]=RADIUS*Math.cos(phi);
+    curPos[i*3]=basePos[i*3];
+    curPos[i*3+1]=basePos[i*3+1];
+    curPos[i*3+2]=basePos[i*3+2];
+    var eq=Math.abs(phi-Math.PI/2)/(Math.PI/2);
+    alphas[i]=(0.18+Math.random()*0.5)*Math.max(0.06,1-Math.pow(eq,1.4)*0.9);
+    sizes[i]=2.6*(0.6+Math.random()*0.4);
+  }
+
+  var geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(curPos,3));
+  geo.setAttribute('alpha',new THREE.BufferAttribute(alphas,1));
+  geo.setAttribute('size',new THREE.BufferAttribute(sizes,1));
+
+  var mat=new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,depthTest:false,
+    uniforms:{uTime:{value:0},uMouse:{value:new THREE.Vector3(-10,-10,0)}},
+    vertexShader:`
+      attribute float alpha;
+      attribute float size;
+      varying float vAlpha;
+      varying float vZ;
+      uniform float uTime;
+      void main(){
+        vAlpha=alpha;
+        vec3 pos=position;
+        float breath=sin(uTime*0.2+pos.x*1.0+pos.y*1.5+pos.z*1.2)*0.015;
+        pos*=1.0+breath;
+        vec4 mv=modelViewMatrix*vec4(pos,1.0);
+        vZ=pos.z;
+        gl_PointSize=size*1.8;
+        gl_Position=projectionMatrix*mv;
+      }
+    `,
+    fragmentShader:`
+      varying float vAlpha;
+      varying float vZ;
+      void main(){
+        float d=length(gl_PointCoord-vec2(0.5));
+        if(d>0.5)discard;
+        float edge=1.0-smoothstep(0.25,0.5,d);
+        float zFade=smoothstep(-6.8,4.5,vZ);
+        float a=vAlpha*edge*(0.04+zFade*0.76);
+        gl_FragColor=vec4(1.0,1.0,1.0,a);
+      }
+    `
+  });
+
+  var sphere=new THREE.Points(geo,mat);
+  scene.add(sphere);
+
+  function eX(){return frustumSize*aspect/2}
+  function eY(){return frustumSize/2}
+
+  /* Smoother scroll path with fewer waypoints = less jerky */
+  var orbPath=[
+    {scroll:0,   x:function(){return eX()*0.50},y:function(){return 0},          s:0.82},
+    {scroll:0.25,x:function(){return-eX()*0.42},y:function(){return eY()*0.35},  s:0.55},
+    {scroll:0.55,x:function(){return eX()*0.25}, y:function(){return-eY()*0.25}, s:0.48},
+    {scroll:1,   x:function(){return 0},          y:function(){return 0},          s:0.65}
+  ];
+
+  var targetX=0,targetY=0,targetS=0.82;
+  var curX=eX()*0.50,curY=0,curS=0.82;
+  targetX=curX;
+
+  /* Smooth scroll interpolation using catmull-rom-like cubic hermite */
+  function hermite(t){return t*t*(3-2*t)}
+
+  function updateOrbTarget(){
+    var sh=document.documentElement.scrollHeight-window.innerHeight;
+    var p=sh>0?window.scrollY/sh:0;
+    var a=orbPath[0],b=orbPath[orbPath.length-1];
+    for(var i=0;i<orbPath.length-1;i++){
+      if(p>=orbPath[i].scroll&&p<=orbPath[i+1].scroll){a=orbPath[i];b=orbPath[i+1];break}
+    }
+    var range=b.scroll-a.scroll||1;
+    var t=Math.max(0,Math.min(1,(p-a.scroll)/range));
+    var e=hermite(hermite(t));
+    targetX=a.x()+(b.x()-a.x())*e;
+    targetY=a.y()+(b.y()-a.y())*e;
+    targetS=a.s+(b.s-a.s)*e;
+  }
+
+  window.addEventListener('scroll',updateOrbTarget,{passive:true});
+
+  var heroInner=document.getElementById('heroInner');
+  var heroFade=document.getElementById('heroFade');
+  window.addEventListener('scroll',function(){
+    var s=window.scrollY;
+    var t=Math.max(0,Math.min(1,(s-60)/350));
+    if(heroInner){heroInner.style.opacity=1-t;heroInner.style.transform='translateY(calc(-50% - '+t*20+'px))'}
+    heroFade.classList.toggle('active',s>30&&s<500);
+  },{passive:true});
+
+  var mouseNDC=new THREE.Vector2(-10,-10);
+  var mouseWorld=new THREE.Vector3(-10,-10,0);
+  var rawMX=-10,rawMY=-10;
+
+  window.addEventListener('mousemove',function(e){
+    rawMX=(e.clientX/window.innerWidth)*2-1;
+    rawMY=-(e.clientY/window.innerHeight)*2+1;
+  });
+  document.addEventListener('touchmove',function(e){
+    var t=e.touches[0];
+    rawMX=(t.clientX/window.innerWidth)*2-1;
+    rawMY=-(t.clientY/window.innerHeight)*2+1;
+  },{passive:true});
+  document.addEventListener('touchend',function(){rawMX=-10;rawMY=-10});
+
+  function getMouseOnSphere(){
+    var mx=mouseNDC.x*eX(),my=mouseNDC.y*eY();
+    var lx=(mx-curX)/curS,ly=(my-curY)/curS;
+    var d2=lx*lx+ly*ly;
+    if(d2>RADIUS*RADIUS){mouseWorld.set(lx,ly,0);return}
+    mouseWorld.set(lx,ly,Math.sqrt(RADIUS*RADIUS-d2));
+  }
+
+  var rotY=0;
+  function animate(time){
+    var t=time*0.001;
+    mat.uniforms.uTime.value=t;
+    rotY+=0.0005;
+    sphere.rotation.y=rotY;
+    sphere.rotation.x=Math.sin(t*0.08)*0.04;
+
+    mouseNDC.x+=(rawMX-mouseNDC.x)*0.4;
+    mouseNDC.y+=(rawMY-mouseNDC.y)*0.4;
+
+    curX+=(targetX-curX)*0.022;
+    curY+=(targetY-curY)*0.022;
+    curS+=(targetS-curS)*0.022;
+    sphere.position.x=curX;
+    sphere.position.y=curY;
+    sphere.scale.setScalar(curS);
+
+    getMouseOnSphere();
+    mat.uniforms.uMouse.value.copy(mouseWorld);
+
+    var INTERACT_R=2.0;
+    var STRENGTH=0.55;
+    var MAX_DISP=0.8;
+    var RETURN=0.1;
+    for(var i=0;i<DOT_COUNT;i++){
+      var bx=basePos[i*3],by=basePos[i*3+1],bz=basePos[i*3+2];
+      var dx=bx-mouseWorld.x,dy=by-mouseWorld.y,dz=bz-mouseWorld.z;
+      var dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      var tx=bx,ty=by,tz=bz;
+      if(dist<INTERACT_R&&dist>0.01){
+        var t2=dist/INTERACT_R;
+        var falloff=(1-t2)*(1-t2);
+        var f=falloff*STRENGTH;
+        if(f>MAX_DISP)f=MAX_DISP;
+        var nx=dx/dist,ny=dy/dist,nz=dz/dist;
+        tx=bx+nx*f;
+        ty=by+ny*f;
+        tz=bz+nz*f;
+      }
+      curPos[i*3]+=(tx-curPos[i*3])*RETURN;
+      curPos[i*3+1]+=(ty-curPos[i*3+1])*RETURN;
+      curPos[i*3+2]+=(tz-curPos[i*3+2])*RETURN;
+    }
+    geo.attributes.position.needsUpdate=true;
+    renderer.render(scene,camera);
+    requestAnimationFrame(animate);
+  }
+  animate(0);
+
+  window.addEventListener('resize',function(){
+    var w=window.innerWidth,h=window.innerHeight;
+    aspect=w/h;
+    camera.left=-frustumSize*aspect/2;camera.right=frustumSize*aspect/2;
+    camera.top=frustumSize/2;camera.bottom=-frustumSize/2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w,h);updateOrbTarget();
+  });
+
+  /* Scroll observers */
+  var obs=new IntersectionObserver(function(e){
+    e.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible')});
+  },{threshold:.12});
+  document.querySelectorAll('[data-anim="scroll"]').forEach(function(el){obs.observe(el)});
+
+  var dObs=new IntersectionObserver(function(e){
+    e.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.querySelectorAll('.domain-tag').forEach(function(t,i){
+          setTimeout(function(){t.classList.add('visible')},i*50);
+        });
+        dObs.unobserve(e.target);
+      }
+    });
+  },{threshold:.15});
+  var dt=document.querySelector('.domain-tags');
+  if(dt)dObs.observe(dt);
+
+  /* Counter animation */
+  var cObs=new IntersectionObserver(function(e){
+    e.forEach(function(e){
+      if(e.isIntersecting){
+        var el=e.target.querySelector('.stat-number');
+        var target=parseInt(el.dataset.count);
+        var c=0,inc=target/50;
+        var suffix=target>=10000?'+':target===94?'%':'+';
+        var interval=setInterval(function(){
+          c+=inc;
+          if(c>=target){c=target;clearInterval(interval)}
+          el.textContent=Math.round(c).toLocaleString()+suffix;
+        },30);
+        cObs.unobserve(e.target);
+      }
+    });
+  },{threshold:.5});
+  document.querySelectorAll('.stat-item').forEach(function(el){cObs.observe(el)});
+
+  /* Letter-by-letter hero */
+  function animateLetters(id,text,delay){
+    var el=document.getElementById(id);
+    text.split('').forEach(function(ch,i){
+      var span=document.createElement('span');
+      span.textContent=ch;
+      span.style.cssText='display:inline-block;opacity:0;transform:translateY(50px) rotateX(-30deg);animation:letterIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;animation-delay:'+String(delay+i*0.06)+'s';
+      el.appendChild(span);
+    });
+  }
+  animateLetters('word1','PATH',0.4);
+  animateLetters('word2','ENGINE',0.75);
+})();
+</script>
+</body>
+</html>
