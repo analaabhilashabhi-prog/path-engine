@@ -186,7 +186,8 @@ function getFallbackSkills(domain){var map={'Web Development':['HTML','CSS','Jav
 function showSkill(idx){
   currentSkillIdx=idx;
   var area=document.getElementById('skillArea');
-  document.getElementById('loadingSkills').style.display='none';
+  var loadEl=document.getElementById('loadingSkills');
+  if(loadEl)loadEl.style.display='none';
   var skillName=skills[idx];
   var existingRating=ratings[skillName]||0;
   var pct=Math.round((idx/skills.length)*100);
