@@ -99,7 +99,8 @@ body::-webkit-scrollbar{display:none}
 .star{width:52px;height:52px;cursor:pointer;transition:all .15s;opacity:0.2}
 .star:hover{opacity:0.6;transform:scale(1.1)}
 .star.active{opacity:1;animation:starPop .3s ease}
-.star svg{width:100%;height:100%}
+.star svg{width:100%;height:100%;pointer-events:none}
+.star path{pointer-events:none}
 .star-labels{display:flex;justify-content:space-between;width:100%;max-width:320px;margin:0 auto 10px;font-size:10px;color:var(--text-3)}
 .rating-label{font-size:15px;color:var(--text-1);font-weight:500;height:24px;margin-bottom:36px}
 .l1-nav{display:flex;gap:12px}
@@ -236,7 +237,7 @@ function showSkill(idx){currentSkillIdx=idx;var area=document.getElementById('sk
 
 function hoverStars(n){document.querySelectorAll('.star').forEach(function(s,i){var svg=s.querySelector('svg');if(i<n){s.classList.add('active');svg.setAttribute('fill','#10b981');svg.setAttribute('stroke','#10b981')}else{s.classList.remove('active');svg.setAttribute('fill','none');svg.setAttribute('stroke','rgba(255,255,255,0.15)')}});document.getElementById('ratingLabel').textContent=ratingLabels[n]||''}
 function resetStars(){var current=ratings[skills[currentSkillIdx]]||0;document.querySelectorAll('.star').forEach(function(s,i){var svg=s.querySelector('svg');if(i<current){s.classList.add('active');svg.setAttribute('fill','#10b981');svg.setAttribute('stroke','#10b981')}else{s.classList.remove('active');svg.setAttribute('fill','none');svg.setAttribute('stroke','rgba(255,255,255,0.15)')}});document.getElementById('ratingLabel').textContent=current?ratingLabels[current]:'Click a star to rate'}
-function rateStar(n){ratings[skills[currentSkillIdx]]=n;hoverStars(n);document.getElementById('btnNext').disabled=false}
+function rateStar(n){ratings[skills[currentSkillIdx]]=n;hoverStars(n);var btn=document.getElementById('btnNext');if(btn)btn.disabled=false;if(btn)btn.removeAttribute('disabled')}
 function nextSkill(){if(currentSkillIdx<skills.length-1)showSkill(currentSkillIdx+1)}
 function prevSkill(){if(currentSkillIdx>0)showSkill(currentSkillIdx-1)}
 
