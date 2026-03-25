@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Path Engine — Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#030305;--accent:#10b981;--accent-light:#34d399;--accent-dim:rgba(16,185,129,0.06);--text-1:#fff;--text-2:rgba(255,255,255,0.5);--text-3:rgba(255,255,255,0.25);--border:rgba(255,255,255,0.08);--danger:#ef4444;--font-display:'Space Grotesk',sans-serif;--font-body:'Inter',sans-serif;--radius:8px}
+html{scrollbar-width:none}html::-webkit-scrollbar{display:none}
+body{background:var(--bg);color:var(--text-1);font-family:var(--font-body);margin:0;min-height:100vh;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none}
+body::-webkit-scrollbar{display:none}
+::selection{background:transparent}
+
+/* Anti-cheat: disable right click, copy, paste */
+body{-webkit-touch-callout:none}
+
+.page{opacity:0;animation:pageFadeIn .8s ease .2s forwards}
+@keyframes pageFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+#orb-container{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:1;pointer-events:none}
+.logo-mark{position:fixed;top:28px;left:32px;z-index:20;display:flex;align-items:center;gap:12px}
+.logo-mark img{width:40px;height:40px}
+.logo-mark span{font-family:var(--font-display);font-size:17px;font-weight:700}
+.logo-mark .acc{color:var(--accent)}
+
+/* LOBBY */
+.lobby{position:relative;z-index:10;max-width:600px;margin:0 auto;padding:120px 24px 60px;display:flex;flex-direction:column;align-items:center}
+.lobby-title{font-family:var(--font-display);font-size:32px;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:-0.5px}
+.lobby-sub{font-size:14px;color:var(--text-2);text-align:center;margin-bottom:40px;line-height:1.7}
+.lobby-rules{width:100%;margin-bottom:32px}
+.rule-item{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;opacity:0;transform:translateX(-30px)}
+.rule-item.show{animation:slideRight .5s ease forwards}
+.rule-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.rule-icon.green{background:rgba(16,185,129,0.1);color:var(--accent)}
+.rule-icon.yellow{background:rgba(245,158,11,0.1);color:#f59e0b}
+.rule-icon.red{background:rgba(239,68,68,0.1);color:#ef4444}
+.rule-icon.blue{background:rgba(59,130,246,0.1);color:#3b82f6}
+.rule-icon.purple{background:rgba(139,92,246,0.1);color:#8b5cf6}
+.rule-text h4{font-size:14px;font-weight:600;margin-bottom:3px}
+.rule-text p{font-size:12px;color:var(--text-2);line-height:1.5}
+.lobby-layers{width:100%;margin-bottom:28px;opacity:0}
+.lobby-layers.show{animation:fadeUp .5s ease forwards}
+.layer-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.layer-pill{padding:8px 16px;border-radius:100px;font-size:12px;border:0.5px solid var(--border);color:var(--text-2)}
+.layer-pill.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.lobby-time{font-size:13px;color:var(--text-3);text-align:center;margin-bottom:28px;opacity:0}
+.lobby-time.show{animation:fadeUp .5s ease forwards}
+.lobby-time span{color:var(--accent);font-weight:600}
+.pledge-box{width:100%;padding:16px 20px;border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:24px;opacity:0;cursor:pointer;transition:border-color .3s}
+.pledge-box.show{animation:fadeUp .5s ease forwards}
+.pledge-box.checked{border-color:var(--accent)}
+.pledge-row{display:flex;align-items:center;gap:12px}
+.pledge-check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
+.pledge-box.checked .pledge-check{background:var(--accent);border-color:var(--accent)}
+.pledge-box.checked .pledge-check::after{content:'✓';color:#030305;font-size:14px;font-weight:700}
+.pledge-label{font-size:13px;color:var(--text-2);line-height:1.5}
+.btn-start{padding:16px 48px;border-radius:var(--radius);font-size:16px;font-weight:700;font-family:var(--font-display);background:var(--accent);color:#030305;border:none;cursor:pointer;transition:all .3s;opacity:0;letter-spacing:-0.3px}
+.btn-start.show{animation:fadeUp .5s ease forwards}
+.btn-start:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+.btn-start:not(:disabled):hover{background:var(--accent-light);transform:translateY(-2px);box-shadow:0 0 40px rgba(16,185,129,0.2)}
+
+/* LAYER 1 - Self Eval */
+.layer1{position:relative;z-index:10;max-width:560px;margin:0 auto;padding:120px 24px 60px;display:none}
+.layer1.show{display:flex;flex-direction:column;align-items:center}
+.l1-header{text-align:center;margin-bottom:36px}
+.l1-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:6px;letter-spacing:-0.3px}
+.l1-sub{font-size:13px;color:var(--text-2);line-height:1.6}
+.l1-progress{width:100%;display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.l1-bar{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.l1-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.l1-count{font-size:12px;color:var(--text-3);white-space:nowrap}
+.l1-count span{color:var(--accent);font-weight:600}
+.skill-card{width:100%;text-align:center;animation:fadeUp .4s ease}
+.skill-name{font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px}
+.skill-desc{font-size:13px;color:var(--text-3);margin-bottom:32px}
+.stars{display:flex;justify-content:center;gap:12px;margin-bottom:16px}
+.star{width:48px;height:48px;cursor:pointer;transition:all .2s;opacity:0.25}
+.star:hover,.star.active{opacity:1;transform:scale(1.15)}
+.star svg{width:100%;height:100%}
+.star-labels{display:flex;justify-content:space-between;width:100%;max-width:300px;margin:0 auto 12px;font-size:11px;color:var(--text-3)}
+.rating-label{font-size:14px;color:var(--accent);font-weight:500;height:24px;margin-bottom:28px;transition:opacity .3s}
+.l1-nav{display:flex;gap:12px;width:100%}
+.l1-nav button{flex:1;padding:13px;border-radius:var(--radius);font-size:14px;font-weight:600;font-family:var(--font-body);border:none;cursor:pointer;transition:all .3s}
+.btn-prev{background:rgba(255,255,255,0.04);color:var(--text-2);border:0.5px solid var(--border)!important}
+.btn-prev:hover{background:rgba(255,255,255,0.08);color:var(--text-1)}
+.btn-prev:disabled{opacity:0.3;cursor:not-allowed}
+.btn-next{background:var(--accent);color:#030305}
+.btn-next:hover{background:var(--accent-light)}
+.btn-next:disabled{opacity:0.3;cursor:not-allowed}
+
+/* Loading state */
+.loading-skills{text-align:center;padding:60px 20px}
+.loading-skills p{font-size:14px;color:var(--text-2);margin-bottom:12px}
+.loading-dots{display:flex;justify-content:center;gap:6px}
+.loading-dots span{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:dotPulse 1.2s ease infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotPulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+
+/* Disconnect overlay */
+.disconnect-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(3,3,5,0.9);z-index:1000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.disconnect-overlay.show{display:flex}
+.disconnect-overlay p{font-size:16px;color:var(--text-1);font-weight:500}
+.disconnect-overlay .sub{font-size:13px;color:var(--text-2)}
+
+@media(max-width:480px){
+  .lobby{padding:100px 18px 40px}
+  .lobby-title{font-size:26px}
+  .layer1{padding:100px 18px 40px}
+  .skill-name{font-size:24px}
+  .star{width:40px;height:40px}
+  .logo-mark{top:20px;left:18px}
+  .logo-mark img{width:32px;height:32px}
+  .logo-mark span{font-size:15px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<div id="orb-container"></div>
+<div class="logo-mark"><img src="https://i.ibb.co/nMFjJgcZ/logo-png.png" alt=""><div style="width:1px;height:24px;background:rgba(255,255,255,0.15)"></div><span>Path <span class="acc">Engine</span></span></div>
+
+<!-- DISCONNECT OVERLAY -->
+<div class="disconnect-overlay" id="disconnectOverlay"><p>Connection lost</p><p class="sub">Waiting to reconnect...</p><div class="loading-dots"><span></span><span></span><span></span></div></div>
+
+<!-- LOBBY -->
+<div class="lobby" id="lobbySection">
+<h1 class="lobby-title">Assessment <span style="color:var(--accent)">Lobby</span></h1>
+<p class="lobby-sub">Before you begin, please read through the rules carefully.</p>
+
+<div class="lobby-rules" id="lobbyRules">
+<div class="rule-item" data-delay="200"><div class="rule-icon green">⏱</div><div class="rule-text"><h4>Timed questions</h4><p>Each question has a countdown timer (30-60 sec). Unanswered questions auto-skip.</p></div></div>
+<div class="rule-item" data-delay="500"><div class="rule-icon red">⚠</div><div class="rule-text"><h4>No tab switching</h4><p>Switching tabs or exiting fullscreen triggers a warning. Second time = auto-submit.</p></div></div>
+<div class="rule-item" data-delay="800"><div class="rule-icon yellow">🔒</div><div class="rule-text"><h4>Fullscreen mode</h4><p>The quiz section runs in fullscreen. You'll be prompted when it starts.</p></div></div>
+<div class="rule-item" data-delay="1100"><div class="rule-icon blue">🔄</div><div class="rule-text"><h4>No going back</h4><p>Once you answer a quiz question and move on, you can't return to it.</p></div></div>
+<div class="rule-item" data-delay="1400"><div class="rule-icon purple">🧠</div><div class="rule-text"><h4>AI-powered questions</h4><p>Questions are generated uniquely for you. No two students get the same test.</p></div></div>
+<div class="rule-item" data-delay="1700"><div class="rule-icon green">📱</div><div class="rule-text"><h4>Refreshing = restart</h4><p>If you refresh or close the page during the quiz, you'll start over from the beginning.</p></div></div>
+</div>
+
+<div class="lobby-layers" id="lobbyLayers">
+<p style="font-size:12px;color:var(--text-3);margin-bottom:10px;text-align:center">What you'll go through:</p>
+<div class="layer-pills">
+<div class="layer-pill active">Self evaluation</div>
+<div class="layer-pill">Skill quiz</div>
+<div class="layer-pill">Goals & preferences</div>
+<div class="layer-pill">AI conversation</div>
+</div>
+</div>
+
+<div class="lobby-time" id="lobbyTime">Total estimated time: <span>~15-20 minutes</span></div>
+
+<div class="pledge-box" id="pledgeBox" onclick="togglePledge()">
+<div class="pledge-row">
+<div class="pledge-check" id="pledgeCheck"></div>
+<div class="pledge-label">I understand that honest answers = a better roadmap built for ME. I'll answer truthfully to get the most accurate learning path.</div>
+</div>
+</div>
+
+<button class="btn-start" id="btnStart" disabled onclick="startAssessment()">I'm Ready — Begin Assessment</button>
+</div>
+
+<!-- LAYER 1 - Self Evaluation -->
+<div class="layer1" id="layer1Section">
+<div class="l1-header">
+<h2 class="l1-title">Rate your skills</h2>
+<p class="l1-sub">Be honest — this helps AI understand where you are today.</p>
+</div>
+<div class="l1-progress"><div class="l1-bar"><div class="l1-bar-fill" id="l1BarFill" style="width:0%"></div></div><div class="l1-count"><span id="l1Current">1</span> / <span id="l1Total">8</span></div></div>
+
+<div id="skillArea">
+<div class="loading-skills" id="loadingSkills"><p>AI is generating skills for your domain...</p><div class="loading-dots"><span></span><span></span><span></span></div></div>
+</div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-client.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){var c=document.getElementById('orb-container');var r=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setSize(window.innerWidth,window.innerHeight);r.setPixelRatio(Math.min(window.devicePixelRatio,2));r.setClearColor(0x030305,1);c.appendChild(r.domElement);var fs=14,asp=window.innerWidth/window.innerHeight;var cam=new THREE.OrthographicCamera(-fs*asp/2,fs*asp/2,fs/2,-fs/2,0.1,100);cam.position.z=20;var sc=new THREE.Scene();var R=6.8,N=3500;var bp=new Float32Array(N*3),cp=new Float32Array(N*3),al=new Float32Array(N),sz=new Float32Array(N);var g=(1+Math.sqrt(5))/2;for(var i=0;i<N;i++){var t=2*Math.PI*i/g,p=Math.acos(1-2*(i+0.5)/N);bp[i*3]=R*Math.cos(t)*Math.sin(p);bp[i*3+1]=R*Math.sin(t)*Math.sin(p);bp[i*3+2]=R*Math.cos(p);cp[i*3]=bp[i*3];cp[i*3+1]=bp[i*3+1];cp[i*3+2]=bp[i*3+2];var eq=Math.abs(p-Math.PI/2)/(Math.PI/2);al[i]=(0.1+Math.random()*0.3)*Math.max(0.06,1-Math.pow(eq,1.4)*0.9);sz[i]=2*(0.6+Math.random()*0.4)}var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(cp,3));geo.setAttribute('alpha',new THREE.BufferAttribute(al,1));geo.setAttribute('size',new THREE.BufferAttribute(sz,1));var mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uTime:{value:0}},vertexShader:'attribute float alpha;attribute float size;varying float vAlpha;varying float vZ;uniform float uTime;void main(){vAlpha=alpha;vec3 pos=position;float breath=sin(uTime*0.2+pos.x+pos.y*1.5)*0.015;pos*=1.0+breath;vec4 mv=modelViewMatrix*vec4(pos,1.0);vZ=pos.z;gl_PointSize=size*1.8;gl_Position=projectionMatrix*mv;}',fragmentShader:'varying float vAlpha;varying float vZ;void main(){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;float edge=1.0-smoothstep(0.25,0.5,d);float zFade=smoothstep(-6.8,4.5,vZ);float a=vAlpha*edge*(0.03+zFade*0.4);gl_FragColor=vec4(1.0,1.0,1.0,a);}'});var sph=new THREE.Points(geo,mat);sc.add(sph);function eX(){return fs*asp/2}sph.position.x=eX()*0.45;sph.position.y=0;sph.scale.setScalar(0.55);var ry=0;function anim(time){var t=time*0.001;mat.uniforms.uTime.value=t;ry+=0.0003;sph.rotation.y=ry;for(var i=0;i<N;i++){cp[i*3]+=(bp[i*3]-cp[i*3])*0.1;cp[i*3+1]+=(bp[i*3+1]-cp[i*3+1])*0.1;cp[i*3+2]+=(bp[i*3+2]-cp[i*3+2])*0.1}geo.attributes.position.needsUpdate=true;r.render(sc,cam);requestAnimationFrame(anim)}anim(0);window.addEventListener('resize',function(){asp=window.innerWidth/window.innerHeight;cam.left=-fs*asp/2;cam.right=fs*asp/2;cam.top=fs/2;cam.bottom=-fs/2;cam.updateProjectionMatrix();r.setSize(window.innerWidth,window.innerHeight);sph.position.x=eX()*0.45})})();
+</script>
+<script>
+var currentUser=null;
+var userDomain='';
+var userEdu='';
+var skills=[];
+var ratings={};
+var currentSkillIdx=0;
+var pledgeChecked=false;
+var starSvg='<svg viewBox="0 0 24 24" fill="FILL" stroke="STROKE" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+var ratingLabels={1:'Never heard of it',2:'Heard of it, never used',3:'Know the basics',4:'Comfortable using it',5:'Can teach others'};
+
+// Anti-cheat: disable right click and keyboard shortcuts
+document.addEventListener('contextmenu',function(e){e.preventDefault()});
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey&&(e.key==='c'||e.key==='v'||e.key==='a'||e.key==='C'||e.key==='V'||e.key==='A'||e.key==='u'||e.key==='U'||e.key==='s'||e.key==='S'))e.preventDefault();
+  if(e.key==='PrintScreen'||e.key==='F12')e.preventDefault();
+});
+
+// Anti-cheat: detect screenshot attempts
+document.addEventListener('keyup',function(e){if(e.key==='PrintScreen'){navigator.clipboard.writeText('');alert('Screenshots are not allowed during the assessment.')}});
+
+// Internet disconnect detection
+window.addEventListener('offline',function(){document.getElementById('disconnectOverlay').classList.add('show')});
+window.addEventListener('online',function(){document.getElementById('disconnectOverlay').classList.remove('show')});
+
+// Lobby animations
+function animateLobby(){
+  var rules=document.querySelectorAll('.rule-item');
+  rules.forEach(function(r){
+    var delay=parseInt(r.getAttribute('data-delay'));
+    setTimeout(function(){r.classList.add('show')},delay);
+  });
+  setTimeout(function(){document.getElementById('lobbyLayers').classList.add('show')},2200);
+  setTimeout(function(){document.getElementById('lobbyTime').classList.add('show')},2600);
+  setTimeout(function(){document.getElementById('pledgeBox').classList.add('show')},3000);
+  setTimeout(function(){document.getElementById('btnStart').classList.add('show')},3400);
+}
+
+function togglePledge(){
+  pledgeChecked=!pledgeChecked;
+  var box=document.getElementById('pledgeBox');
+  box.classList.toggle('checked',pledgeChecked);
+  document.getElementById('btnStart').disabled=!pledgeChecked;
+}
+
+async function startAssessment(){
+  document.getElementById('lobbySection').style.display='none';
+  document.getElementById('layer1Section').classList.add('show');
+  await generateSkills();
+}
+
+async function generateSkills(){
+  document.getElementById('loadingSkills').style.display='block';
+  
+  try{
+    var response=await fetch('/api/generate-skills',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({domain:userDomain,education:userEdu,userId:currentUser.id})
+    });
+    var data=await response.json();
+    if(data.skills&&data.skills.length>0){
+      skills=data.skills;
+    }else{
+      skills=getFallbackSkills(userDomain);
+    }
+  }catch(err){
+    console.log('AI skill generation failed, using fallback');
+    skills=getFallbackSkills(userDomain);
+  }
+  
+  document.getElementById('l1Total').textContent=skills.length;
+  showSkill(0);
+}
+
+function getFallbackSkills(domain){
+  var map={
+    'Web Development':['HTML','CSS','JavaScript','React/Vue/Angular','Node.js','REST APIs','Git & Version Control','SQL & Databases'],
+    'Mobile App Development':['Java/Kotlin','Swift/Flutter','UI Design Basics','REST APIs','Local Storage','App Deployment','Git','Testing'],
+    'AI & Machine Learning':['Python','Linear Algebra','Statistics','Supervised Learning','Neural Networks','Data Preprocessing','TensorFlow/PyTorch','Model Evaluation'],
+    'Data Science':['Python/R','Statistics','Data Cleaning','SQL','Data Visualization','Pandas/NumPy','Machine Learning Basics','Storytelling with Data'],
+    'Cloud & DevOps':['Linux Basics','Docker','CI/CD Pipelines','AWS/Azure/GCP','Networking','Shell Scripting','Kubernetes','Monitoring & Logging'],
+    'Cybersecurity':['Networking Basics','Linux','Cryptography','Web Security','Firewalls & IDS','Ethical Hacking','Risk Assessment','Incident Response'],
+    'Blockchain':['Distributed Systems','Cryptography','Solidity','Smart Contracts','DeFi Concepts','Web3.js/Ethers','Consensus Mechanisms','Token Standards'],
+    'UI/UX Design':['Figma/Sketch','Color Theory','Typography','Wireframing','Prototyping','User Research','Design Systems','Responsive Design'],
+    'Competitive Programming':['Arrays & Strings','Linked Lists','Trees & Graphs','Dynamic Programming','Sorting Algorithms','Time Complexity','Recursion','Greedy Algorithms'],
+    'Digital Marketing':['SEO','Google Ads','Social Media Marketing','Content Marketing','Email Marketing','Analytics','Copywriting','Conversion Optimization'],
+    'Game Development':['Game Engines (Unity/Unreal)','2D/3D Graphics','Physics Systems','Game Logic','Animation','Sound Design','Level Design','Performance Optimization']
+  };
+  return map[domain]||['Problem Solving','Critical Thinking','Technical Writing','Research Skills','Communication','Project Management','Time Management','Collaboration'];
+}
+
+function showSkill(idx){
+  currentSkillIdx=idx;
+  var area=document.getElementById('skillArea');
+  document.getElementById('loadingSkills').style.display='none';
+  var skillName=skills[idx];
+  var existingRating=ratings[skillName]||0;
+  
+  var pct=Math.round(((idx)/skills.length)*100);
+  document.getElementById('l1BarFill').style.width=pct+'%';
+  document.getElementById('l1Current').textContent=idx+1;
+  
+  var html='<div class="skill-card"><h2 class="skill-name">'+skillName+'</h2>';
+  html+='<p class="skill-desc">How would you rate your knowledge?</p>';
+  html+='<div class="stars">';
+  for(var i=1;i<=5;i++){
+    var fill=i<=existingRating?'#10b981':'none';
+    var stroke=i<=existingRating?'#10b981':'rgba(255,255,255,0.2)';
+    var active=i<=existingRating?' active':'';
+    html+='<div class="star'+active+'" onclick="rateStar('+i+')" onmouseover="hoverStars('+i+')" onmouseout="resetStars()">'+starSvg.replace('FILL',fill).replace('STROKE',stroke)+'</div>';
+  }
+  html+='</div>';
+  html+='<div class="star-labels"><span>Never heard</span><span>Basics</span><span>Can teach</span></div>';
+  html+='<div class="rating-label" id="ratingLabel">'+(existingRating?ratingLabels[existingRating]:'')+'</div>';
+  html+='<div class="l1-nav">';
+  html+='<button class="btn-prev" onclick="prevSkill()"'+(idx===0?' disabled':'')+'>← Previous</button>';
+  if(idx===skills.length-1){
+    html+='<button class="btn-next" id="btnNext" onclick="finishLayer1()"'+(existingRating?'':' disabled')+'>Finish →</button>';
+  }else{
+    html+='<button class="btn-next" id="btnNext" onclick="nextSkill()"'+(existingRating?'':' disabled')+'>Next →</button>';
+  }
+  html+='</div></div>';
+  area.innerHTML=html;
+}
+
+function hoverStars(n){
+  document.querySelectorAll('.star').forEach(function(s,i){
+    var svg=s.querySelector('svg');
+    if(i<n){s.classList.add('active');svg.setAttribute('fill','#10b981');svg.setAttribute('stroke','#10b981')}
+    else{s.classList.remove('active');svg.setAttribute('fill','none');svg.setAttribute('stroke','rgba(255,255,255,0.2)')}
+  });
+  document.getElementById('ratingLabel').textContent=ratingLabels[n]||'';
+}
+
+function resetStars(){
+  var current=ratings[skills[currentSkillIdx]]||0;
+  document.querySelectorAll('.star').forEach(function(s,i){
+    var svg=s.querySelector('svg');
+    if(i<current){s.classList.add('active');svg.setAttribute('fill','#10b981');svg.setAttribute('stroke','#10b981')}
+    else{s.classList.remove('active');svg.setAttribute('fill','none');svg.setAttribute('stroke','rgba(255,255,255,0.2)')}
+  });
+  document.getElementById('ratingLabel').textContent=current?ratingLabels[current]:'';
+}
+
+function rateStar(n){
+  ratings[skills[currentSkillIdx]]=n;
+  hoverStars(n);
+  document.getElementById('btnNext').disabled=false;
+}
+
+function nextSkill(){
+  if(currentSkillIdx<skills.length-1)showSkill(currentSkillIdx+1);
+}
+function prevSkill(){
+  if(currentSkillIdx>0)showSkill(currentSkillIdx-1);
+}
+
+async function finishLayer1(){
+  var allRated=true;
+  skills.forEach(function(s){if(!ratings[s])allRated=false});
+  if(!allRated){alert('Please rate all skills before continuing.');return}
+  
+  var btn=document.getElementById('btnNext');
+  btn.disabled=true;
+  btn.textContent='Saving...';
+  
+  try{
+    await supabaseClient.from('assessment_responses').insert({
+      user_id:currentUser.id,
+      layer:'self_evaluation',
+      response_data:ratings,
+      created_at:new Date().toISOString()
+    });
+  }catch(err){
+    console.log('Save error:',err);
+  }
+  
+  document.getElementById('l1BarFill').style.width='100%';
+  alert('Layer 1 complete! Layer 2 (Quiz) coming next...');
+  // TODO: transition to Layer 2
+}
+
+// Init
+(async function(){
+  var session=await getSession();
+  if(!session){window.location.href='/pages/auth.html';return}
+  currentUser=session.user;
+  
+  var {data:profile}=await supabaseClient.from('profiles').select('domain').eq('id',currentUser.id).single();
+  userDomain=profile?profile.domain:'';
+  
+  var {data:academic}=await supabaseClient.from('academic_profiles').select('education_level').eq('user_id',currentUser.id).single();
+  userEdu=academic?academic.education_level:'';
+  
+  if(!userDomain){window.location.href='/pages/academic-profile.html';return}
+  
+  animateLobby();
+})();
+</script>
+</body>
+</html>

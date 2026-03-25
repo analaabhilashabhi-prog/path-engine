@@ -25,6 +25,10 @@ app.use('/api/', limiter);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// API Routes
+var assessmentRoute = require('./routes/assessment');
+app.use('/api', assessmentRoute);
+
 app.get('/pages/:page', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pages', req.params.page));
 });
