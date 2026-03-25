@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Path Engine — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:#030305;color:#fff;font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased}
+.container{text-align:center;max-width:500px;padding:40px}
+h1{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;margin-bottom:12px}
+.accent{color:#10b981}
+p{font-size:15px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:24px}
+.user-info{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin-bottom:24px;text-align:left}
+.user-info p{margin-bottom:8px;font-size:13px;color:rgba(255,255,255,0.6)}
+.user-info span{color:#fff;font-weight:500}
+.btn{padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .3s;font-family:'Inter',sans-serif;margin:4px}
+.btn-primary{background:#10b981;color:#030305}
+.btn-primary:hover{background:#34d399}
+.btn-outline{background:transparent;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08)}
+.btn-outline:hover{border-color:rgba(255,255,255,0.2);color:#fff}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Welcome to your <span class="accent">Dashboard</span></h1>
+<p>You've made it! This is a placeholder — we'll build the full dashboard with your roadmap, progress tracking, and AI features next.</p>
+<div class="user-info" id="userInfo"></div>
+<button class="btn btn-primary" onclick="window.location.href='/'">Back to Home</button>
+<button class="btn btn-outline" onclick="handleSignOut()">Sign Out</button>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-client.js"></script>
+<script>
+async function handleSignOut(){
+  await signOut();
+  window.location.href='/pages/auth.html';
+}
+(async function(){
+  var session=await getSession();
+  if(!session){window.location.href='/pages/auth.html';return}
+  var user=session.user;
+  var name=user.user_metadata.full_name||user.user_metadata.name||user.email.split('@')[0];
+  var email=user.email;
+  var provider=user.app_metadata.provider||'email';
+  document.getElementById('userInfo').innerHTML='<p>Name: <span>'+name+'</span></p><p>Email: <span>'+email+'</span></p><p>Signed in via: <span>'+provider+'</span></p>';
+})();
+</script>
+</body>
+</html>

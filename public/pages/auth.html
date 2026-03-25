@@ -7,37 +7,31 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#030305;--bg-input:rgba(255,255,255,0.04);--accent:#10b981;--accent-light:#34d399;--accent-dim:rgba(16,185,129,0.06);--text-1:#ffffff;--text-2:rgba(255,255,255,0.5);--text-3:rgba(255,255,255,0.25);--border:rgba(255,255,255,0.08);--danger:#ef4444;--font-display:'Space Grotesk',sans-serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;--radius-sm:8px}
+:root{--bg:#030305;--bg-input:rgba(255,255,255,0.04);--accent:#10b981;--accent-light:#34d399;--accent-dim:rgba(16,185,129,0.06);--text-1:#fff;--text-2:rgba(255,255,255,0.5);--text-3:rgba(255,255,255,0.25);--border:rgba(255,255,255,0.08);--danger:#ef4444;--font-display:'Space Grotesk',sans-serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;--radius-sm:8px}
 html{scrollbar-width:none}html::-webkit-scrollbar{display:none}
 body{background:var(--bg);color:var(--text-1);font-family:var(--font-body);margin:0;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
 body::-webkit-scrollbar{display:none}
 ::selection{background:rgba(16,185,129,0.25);color:#fff}
-
-/* Full page - single black bg */
-.page{position:relative;width:100%;height:100vh;background:var(--bg)}
-
-/* Orb - full page canvas, orb positioned left */
+.page{position:relative;width:100%;height:100vh;background:var(--bg);opacity:0;animation:pageFadeIn .8s ease .2s forwards}
+.page-overlay-in{position:fixed;top:0;left:0;width:100%;height:100%;background:#030305;z-index:9999;animation:overlayOut 1s ease .2s forwards}
+.page-overlay-out{position:fixed;top:0;left:0;width:100%;height:100%;background:#030305;z-index:9999;opacity:0;pointer-events:none;transition:opacity .8s ease}
+.page-overlay-out.active{opacity:1;pointer-events:all}
+@keyframes pageFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes overlayOut{from{opacity:1}to{opacity:0;pointer-events:none}}
 #orb-container{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:1;pointer-events:none}
 #orb-container canvas{pointer-events:auto}
-
-/* Big logo top-left */
 .logo-mark{position:absolute;top:36px;left:40px;z-index:20;display:flex;align-items:center;gap:16px}
 .logo-mark img{width:72px;height:72px}
-.logo-mark span{font-family:var(--font-display);font-size:26px;font-weight:700;letter-spacing:-0.5px}
+.logo-mark span{font-family:var(--font-display);font-size:26px;font-weight:700}
 .logo-mark .acc{color:var(--accent)}
-
-/* Back to home - top right, aligned with form */
-.back-home{position:absolute;top:44px;right:8%;z-index:20;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text-3);transition:color .3s}
+.back-home{position:absolute;top:44px;right:8%;z-index:20;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text-3);transition:color .3s;cursor:pointer}
 .back-home:hover{color:var(--text-1)}
 .back-arrow{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;transition:all .3s}
 .back-home:hover .back-arrow{border-color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.03)}
 .back-label{font-size:13px;font-weight:500;padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,0.1);transition:all .3s}
 .back-home:hover .back-label{border-color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.03)}
-
-/* Form container - shifted more left */
 .form-wrapper{position:absolute;top:0;right:8%;width:45%;max-width:520px;height:100vh;z-index:10;display:flex;align-items:center;justify-content:center;padding:40px 48px;overflow-y:auto;scrollbar-width:none}
 .form-wrapper::-webkit-scrollbar{display:none}
-
 .auth-form{width:100%;max-width:370px}
 .auth-header{margin-bottom:32px}
 .auth-title{font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-0.5px}
@@ -93,59 +87,33 @@ body::-webkit-scrollbar{display:none}
 .forgot-link:hover{color:var(--accent-light)}
 .form-panel{display:none}
 .form-panel.active{display:block;animation:fadeUp .4s ease}
-.page{opacity:0;animation:pageFadeIn 1s ease .3s forwards}
-.page-overlay-in{position:fixed;top:0;left:0;width:100%;height:100%;background:#030305;z-index:9999;animation:overlayOut 1s ease .2s forwards}
-@keyframes pageFadeIn{from{opacity:0}to{opacity:1}}
-@keyframes overlayOut{from{opacity:1}to{opacity:0;pointer-events:none}}
-.page-overlay-out{position:fixed;top:0;left:0;width:100%;height:100%;background:#030305;z-index:9999;opacity:0;pointer-events:none;transition:opacity .8s ease}
-.page-overlay-out.active{opacity:1;pointer-events:all}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);cursor:pointer;margin-bottom:20px;transition:color .3s;background:none;border:none;font-family:var(--font-body);padding:0}
+.back-btn:hover{color:var(--text-1)}
+.back-btn svg{width:16px;height:16px}
+.otp-inputs{display:flex;gap:8px;justify-content:center;margin:20px 0}
+.otp-box{width:48px;height:56px;text-align:center;font-size:22px;font-weight:600;font-family:var(--font-display);background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-1);outline:none;transition:border-color .3s}
+.otp-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
+.resend-link{font-size:12px;color:var(--text-3);text-align:center;margin-top:12px}
+.resend-link a{color:var(--accent);cursor:pointer}
+.resend-timer{color:var(--text-3)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-
-@media(max-width:900px){
-  .form-wrapper{width:100%;max-width:100%;position:relative;right:0;height:auto;min-height:100vh;padding:120px 24px 40px}
-  #orb-container{width:100%;height:50vh;position:fixed;top:0;left:0;opacity:0.3}
-  .logo-mark{top:20px;left:20px}
-  .logo-mark img{width:48px;height:48px}
-  .logo-mark span{font-size:20px}
-  .back-home{top:24px;right:20px}
-  .back-label{display:none}
-}
-@media(max-width:480px){
-  .form-wrapper{padding:100px 18px 32px}
-  .auth-title{font-size:24px}
-  .logo-mark{top:16px;left:16px}
-  .logo-mark img{width:40px;height:40px}
-  .logo-mark span{font-size:17px}
-}
+@media(max-width:900px){.form-wrapper{width:100%;max-width:100%;position:relative;right:0;height:auto;min-height:100vh;padding:120px 24px 40px}#orb-container{width:100%;height:50vh;position:fixed;opacity:0.3}.logo-mark{top:20px;left:20px}.logo-mark img{width:48px;height:48px}.logo-mark span{font-size:20px}.back-home{top:24px;right:20px}.back-label{display:none}}
+@media(max-width:480px){.form-wrapper{padding:100px 18px 32px}.auth-title{font-size:24px}.logo-mark{top:16px;left:16px}.logo-mark img{width:40px;height:40px}.logo-mark span{font-size:17px}.otp-box{width:42px;height:50px;font-size:20px}}
 </style>
 </head>
 <body>
 <div class="page-overlay-in"></div>
 <div class="page-overlay-out" id="exitOverlay"></div>
 <div class="page">
-
-<!-- ORB - half visible from left edge -->
 <div id="orb-container"></div>
+<div class="logo-mark"><img src="https://i.ibb.co/nMFjJgcZ/logo-png.png" alt=""><div style="width:1px;height:36px;background:rgba(255,255,255,0.15)"></div><span>Path <span class="acc">Engine</span></span></div>
+<a class="back-home" onclick="exitToHome(event)"><div class="back-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></div><div class="back-label">Back to Home</div></a>
 
-<!-- BIG LOGO - top left -->
-<div class="logo-mark">
-<img src="https://i.ibb.co/nMFjJgcZ/logo-png.png" alt="">
-<div style="width:1px;height:36px;background:rgba(255,255,255,0.15)"></div>
-<span>Path <span class="acc">Engine</span></span>
-</div>
-
-<!-- BACK TO HOME - bottom left Wardiere style -->
-<a href="#" class="back-home" onclick="exitToHome(event)">
-<div class="back-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></div>
-<div class="back-label">Back to Home</div>
-</a>
-
-<!-- FORM - right side floating -->
 <div class="form-wrapper">
 <div class="auth-form">
 <div class="auth-header" id="authHeader"><h1 class="auth-title">Welcome back</h1><p class="auth-sub">Log in to continue your learning journey</p></div>
-<div class="tab-switch"><button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Log In</button><button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">Sign Up</button></div>
+<div class="tab-switch" id="tabBar"><button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Log In</button><button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">Sign Up</button></div>
 <div class="form-error-box" id="formError"></div>
 <div class="form-success-box" id="formSuccess"></div>
 
@@ -174,108 +142,41 @@ body::-webkit-scrollbar{display:none}
 <div class="auth-footer"><p>Already have an account? <a onclick="switchTab('login')">Log in</a></p></div>
 </div>
 
-<!-- FORGOT PASSWORD -->
-<div class="form-panel" id="forgotPanel">
-<div class="form-group"><label class="form-label">Enter your email to reset password</label><input type="email" class="form-input" id="forgotEmail" placeholder="you@example.com"><span class="error-msg" id="forgotEmailError"></span></div>
-<button class="btn-submit" id="forgotBtn" onclick="handleForgotPassword()"><span class="btn-text">Send Reset Link</span><div class="btn-spinner"></div></button>
-<div class="auth-footer" style="margin-top:16px"><p><a onclick="switchTab('login')">Back to login</a></p></div>
-</div>
-</div>
+<!-- OTP VERIFICATION -->
+<div class="form-panel" id="otpPanel">
+<button class="back-btn" onclick="backFromOTP()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</button>
+<div style="text-align:center;margin-bottom:24px"><h2 style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:8px">Verify your email</h2><p style="font-size:13px;color:var(--text-2);line-height:1.6">We sent a 6-digit code to<br><span id="otpEmail" style="color:var(--accent);font-weight:500"></span></p></div>
+<div class="otp-inputs" id="otpInputs"><input class="otp-box" type="text" maxlength="1" oninput="otpNext(this,0)" onkeydown="otpBack(event,0)"><input class="otp-box" type="text" maxlength="1" oninput="otpNext(this,1)" onkeydown="otpBack(event,1)"><input class="otp-box" type="text" maxlength="1" oninput="otpNext(this,2)" onkeydown="otpBack(event,2)"><input class="otp-box" type="text" maxlength="1" oninput="otpNext(this,3)" onkeydown="otpBack(event,3)"><input class="otp-box" type="text" maxlength="1" oninput="otpNext(this,4)" onkeydown="otpBack(event,4)"><input class="otp-box" type="text" maxlength="1" oninput="otpNext(this,5)" onkeydown="otpBack(event,5)"></div>
+<button class="btn-submit" id="otpBtn" onclick="handleVerifyOTP()"><span class="btn-text">Verify</span><div class="btn-spinner"></div></button>
+<div class="resend-link"><span id="resendArea">Didn't get the code? <a onclick="handleResendOTP()">Resend</a></span></div>
 </div>
 
+<!-- FORGOT PASSWORD -->
+<div class="form-panel" id="forgotPanel">
+<button class="back-btn" onclick="switchTab('login')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back to login</button>
+<div class="form-group"><label class="form-label">Enter your email to reset password</label><input type="email" class="form-input" id="forgotEmail" placeholder="you@example.com"><span class="error-msg" id="forgotEmailError"></span></div>
+<button class="btn-submit" id="forgotBtn" onclick="handleForgotPassword()"><span class="btn-text">Send Reset Link</span><div class="btn-spinner"></div></button>
+</div>
+</div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/supabase-client.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-(function(){
-  var c=document.getElementById('orb-container');
-  var r=new THREE.WebGLRenderer({antialias:true,alpha:true});
-  r.setSize(window.innerWidth,window.innerHeight);
-  r.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  r.setClearColor(0x030305,1);
-  c.appendChild(r.domElement);
-
-  var fs=14,asp=window.innerWidth/window.innerHeight;
-  var cam=new THREE.OrthographicCamera(-fs*asp/2,fs*asp/2,fs/2,-fs/2,0.1,100);
-  cam.position.z=20;
-  var sc=new THREE.Scene();
-  var R=6.8,N=5500;
-  var bp=new Float32Array(N*3),cp=new Float32Array(N*3),al=new Float32Array(N),sz=new Float32Array(N);
-  var g=(1+Math.sqrt(5))/2;
-  for(var i=0;i<N;i++){
-    var t=2*Math.PI*i/g,p=Math.acos(1-2*(i+0.5)/N);
-    bp[i*3]=R*Math.cos(t)*Math.sin(p);bp[i*3+1]=R*Math.sin(t)*Math.sin(p);bp[i*3+2]=R*Math.cos(p);
-    cp[i*3]=bp[i*3];cp[i*3+1]=bp[i*3+1];cp[i*3+2]=bp[i*3+2];
-    var eq=Math.abs(p-Math.PI/2)/(Math.PI/2);
-    al[i]=(0.18+Math.random()*0.5)*Math.max(0.06,1-Math.pow(eq,1.4)*0.9);
-    sz[i]=2.6*(0.6+Math.random()*0.4);
-  }
-  var geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.BufferAttribute(cp,3));
-  geo.setAttribute('alpha',new THREE.BufferAttribute(al,1));
-  geo.setAttribute('size',new THREE.BufferAttribute(sz,1));
-  var mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:false,uniforms:{uTime:{value:0}},
-    vertexShader:'attribute float alpha;attribute float size;varying float vAlpha;varying float vZ;uniform float uTime;void main(){vAlpha=alpha;vec3 pos=position;float breath=sin(uTime*0.2+pos.x+pos.y*1.5+pos.z*1.2)*0.015;pos*=1.0+breath;vec4 mv=modelViewMatrix*vec4(pos,1.0);vZ=pos.z;gl_PointSize=size*1.8;gl_Position=projectionMatrix*mv;}',
-    fragmentShader:'varying float vAlpha;varying float vZ;void main(){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;float edge=1.0-smoothstep(0.25,0.5,d);float zFade=smoothstep(-6.8,4.5,vZ);float a=vAlpha*edge*(0.04+zFade*0.76);gl_FragColor=vec4(1.0,1.0,1.0,a);}'
-  });
-  var sph=new THREE.Points(geo,mat);sc.add(sph);
-
-  // Position orb so only right half is visible - center is at left edge
-  function eX(){return fs*asp/2}
-  function eY(){return fs/2}
-
-  // BIG orb - like a planet rising from the left edge, fills the space
-  sph.position.x=-eX()*0.35;
-  sph.position.y=0;
-  sph.scale.setScalar(1.1);
-
-  var mN=new THREE.Vector2(-10,-10),mW=new THREE.Vector3(-10,-10,0),rmx=-10,rmy=-10;
-  window.addEventListener('mousemove',function(e){
-    rmx=(e.clientX/window.innerWidth)*2-1;
-    rmy=-(e.clientY/window.innerHeight)*2+1;
-  });
-
-  function gms(){
-    var mx=mN.x*eX(),my=mN.y*eY();
-    var lx=(mx-sph.position.x)/1.1,ly=(my-sph.position.y)/1.1;
-    var d2=lx*lx+ly*ly;
-    if(d2>R*R){mW.set(lx,ly,0);return}
-    mW.set(lx,ly,Math.sqrt(R*R-d2));
-  }
-
-  var ry=0;
-  function anim(time){
-    var t=time*0.001;mat.uniforms.uTime.value=t;
-    ry+=0.0004;sph.rotation.y=ry;sph.rotation.x=Math.sin(t*0.08)*0.03;
-    mN.x+=(rmx-mN.x)*0.4;mN.y+=(rmy-mN.y)*0.4;
-    gms();
-    for(var i=0;i<N;i++){
-      var bx=bp[i*3],by=bp[i*3+1],bz=bp[i*3+2];
-      var dx=bx-mW.x,dy=by-mW.y,dz=bz-mW.z;
-      var dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
-      var tx=bx,ty=by,tz=bz;
-      if(dist<2&&dist>0.01){var t2=dist/2,f=(1-t2)*(1-t2)*0.55;if(f>0.8)f=0.8;tx=bx+(dx/dist)*f;ty=by+(dy/dist)*f;tz=bz+(dz/dist)*f}
-      cp[i*3]+=(tx-cp[i*3])*0.1;cp[i*3+1]+=(ty-cp[i*3+1])*0.1;cp[i*3+2]+=(tz-cp[i*3+2])*0.1;
-    }
-    geo.attributes.position.needsUpdate=true;r.render(sc,cam);requestAnimationFrame(anim);
-  }
-  anim(0);
-
-  window.addEventListener('resize',function(){
-    asp=window.innerWidth/window.innerHeight;
-    cam.left=-fs*asp/2;cam.right=fs*asp/2;cam.top=fs/2;cam.bottom=-fs/2;
-    cam.updateProjectionMatrix();r.setSize(window.innerWidth,window.innerHeight);
-    sph.position.x=-eX()*0.35;
-  });
-})();
+(function(){var c=document.getElementById('orb-container');var r=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setSize(window.innerWidth,window.innerHeight);r.setPixelRatio(Math.min(window.devicePixelRatio,2));r.setClearColor(0x030305,1);c.appendChild(r.domElement);var fs=14,asp=window.innerWidth/window.innerHeight;var cam=new THREE.OrthographicCamera(-fs*asp/2,fs*asp/2,fs/2,-fs/2,0.1,100);cam.position.z=20;var sc=new THREE.Scene();var R=6.8,N=5500;var bp=new Float32Array(N*3),cp=new Float32Array(N*3),al=new Float32Array(N),sz=new Float32Array(N);var g=(1+Math.sqrt(5))/2;for(var i=0;i<N;i++){var t=2*Math.PI*i/g,p=Math.acos(1-2*(i+0.5)/N);bp[i*3]=R*Math.cos(t)*Math.sin(p);bp[i*3+1]=R*Math.sin(t)*Math.sin(p);bp[i*3+2]=R*Math.cos(p);cp[i*3]=bp[i*3];cp[i*3+1]=bp[i*3+1];cp[i*3+2]=bp[i*3+2];var eq=Math.abs(p-Math.PI/2)/(Math.PI/2);al[i]=(0.18+Math.random()*0.5)*Math.max(0.06,1-Math.pow(eq,1.4)*0.9);sz[i]=2.6*(0.6+Math.random()*0.4)}var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(cp,3));geo.setAttribute('alpha',new THREE.BufferAttribute(al,1));geo.setAttribute('size',new THREE.BufferAttribute(sz,1));var mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:false,uniforms:{uTime:{value:0}},vertexShader:'attribute float alpha;attribute float size;varying float vAlpha;varying float vZ;uniform float uTime;void main(){vAlpha=alpha;vec3 pos=position;float breath=sin(uTime*0.2+pos.x+pos.y*1.5+pos.z*1.2)*0.015;pos*=1.0+breath;vec4 mv=modelViewMatrix*vec4(pos,1.0);vZ=pos.z;gl_PointSize=size*1.8;gl_Position=projectionMatrix*mv;}',fragmentShader:'varying float vAlpha;varying float vZ;void main(){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;float edge=1.0-smoothstep(0.25,0.5,d);float zFade=smoothstep(-6.8,4.5,vZ);float a=vAlpha*edge*(0.04+zFade*0.76);gl_FragColor=vec4(1.0,1.0,1.0,a);}'});var sph=new THREE.Points(geo,mat);sc.add(sph);function eX(){return fs*asp/2}sph.position.x=-eX()*0.35;sph.scale.setScalar(1.1);var mN=new THREE.Vector2(-10,-10),mW=new THREE.Vector3(-10,-10,0),rmx=-10,rmy=-10;window.addEventListener('mousemove',function(e){rmx=(e.clientX/window.innerWidth)*2-1;rmy=-(e.clientY/window.innerHeight)*2+1});function gms(){var mx=mN.x*eX(),my=mN.y*(fs/2),lx=(mx-sph.position.x)/1.1,ly=(my-sph.position.y)/1.1,d2=lx*lx+ly*ly;if(d2>R*R){mW.set(lx,ly,0);return}mW.set(lx,ly,Math.sqrt(R*R-d2))}var ry=0;function anim(time){var t=time*0.001;mat.uniforms.uTime.value=t;ry+=0.0004;sph.rotation.y=ry;sph.rotation.x=Math.sin(t*0.08)*0.03;mN.x+=(rmx-mN.x)*0.4;mN.y+=(rmy-mN.y)*0.4;gms();for(var i=0;i<N;i++){var bx=bp[i*3],by=bp[i*3+1],bz=bp[i*3+2],dx=bx-mW.x,dy=by-mW.y,dz=bz-mW.z,dist=Math.sqrt(dx*dx+dy*dy+dz*dz),tx=bx,ty=by,tz=bz;if(dist<2&&dist>0.01){var t2=dist/2,f=(1-t2)*(1-t2)*0.55;if(f>0.8)f=0.8;tx=bx+(dx/dist)*f;ty=by+(dy/dist)*f;tz=bz+(dz/dist)*f}cp[i*3]+=(tx-cp[i*3])*0.1;cp[i*3+1]+=(ty-cp[i*3+1])*0.1;cp[i*3+2]+=(tz-cp[i*3+2])*0.1}geo.attributes.position.needsUpdate=true;r.render(sc,cam);requestAnimationFrame(anim)}anim(0);window.addEventListener('resize',function(){asp=window.innerWidth/window.innerHeight;cam.left=-fs*asp/2;cam.right=fs*asp/2;cam.top=fs/2;cam.bottom=-fs/2;cam.updateProjectionMatrix();r.setSize(window.innerWidth,window.innerHeight);sph.position.x=-eX()*0.35})})();
 </script>
 <script>
+var signupEmail='';
 var sd={'Web Development':{b:"I've never built a website",i:"I know HTML, CSS, and some JavaScript",a:"I've built full-stack web applications"},'Mobile App Development':{b:"I've never built a mobile app",i:"I've built simple apps with tutorials",a:"I've published apps to Play Store / App Store"},'AI & Machine Learning':{b:"I've never done machine learning",i:"I know Python and basic ML concepts",a:"I've built and deployed ML models"},'Data Science':{b:"I'm new to data analysis",i:"I know Python/R and basic statistics",a:"I've done real data projects"},'Cloud & DevOps':{b:"I've never used cloud platforms",i:"I've deployed apps on AWS/Azure/GCP",a:"I manage cloud infrastructure professionally"},'Cybersecurity':{b:"I'm new to cybersecurity",i:"I understand networking and basic security",a:"I've done penetration testing or CTFs"},'Blockchain':{b:"I only know crypto basics",i:"I understand smart contracts conceptually",a:"I've built dApps or smart contracts"},'Game Development':{b:"I've never made a game",i:"I've used Unity/Unreal for simple projects",a:"I've published or completed full games"},'UI/UX Design':{b:"I'm new to design",i:"I use Figma and know design principles",a:"I've designed products used by real users"},'Competitive Programming':{b:"I'm new to DSA and competitive coding",i:"I solve easy-medium problems on LeetCode",a:"I solve hard problems and compete regularly"},'Digital Marketing':{b:"I'm new to digital marketing",i:"I know SEO, social media basics",a:"I've run campaigns with real results"}};
 var df={b:"I'm completely new to this field",i:"I have some basic knowledge",a:"I have significant experience"};
-function switchTab(t){document.getElementById('loginPanel').classList.remove('active');document.getElementById('signupPanel').classList.remove('active');document.getElementById('forgotPanel').classList.remove('active');document.getElementById('tabLogin').classList.remove('active');document.getElementById('tabSignup').classList.remove('active');document.getElementById('formError').classList.remove('show');document.getElementById('formSuccess').classList.remove('show');var h=document.getElementById('authHeader');if(t==='login'){document.getElementById('loginPanel').classList.add('active');document.getElementById('tabLogin').classList.add('active');h.innerHTML='<h1 class="auth-title">Welcome back</h1><p class="auth-sub">Log in to continue your learning journey</p>';document.title='Path Engine — Sign In'}else{document.getElementById('signupPanel').classList.add('active');document.getElementById('tabSignup').classList.add('active');h.innerHTML='<h1 class="auth-title">Create your account</h1><p class="auth-sub">Start your personalized AI learning journey</p>';document.title='Path Engine — Sign Up'}}
-function showForgotPassword(){document.getElementById('loginPanel').classList.remove('active');document.getElementById('signupPanel').classList.remove('active');document.getElementById('forgotPanel').classList.add('active');document.getElementById('tabLogin').classList.remove('active');document.getElementById('tabSignup').classList.remove('active');document.getElementById('authHeader').innerHTML='<h1 class="auth-title">Reset password</h1><p class="auth-sub">We\'ll send a link to reset your password</p>'}
+
+function hideAllPanels(){['loginPanel','signupPanel','otpPanel','forgotPanel'].forEach(function(id){document.getElementById(id).classList.remove('active')});document.getElementById('formError').classList.remove('show');document.getElementById('formSuccess').classList.remove('show')}
+function switchTab(t){hideAllPanels();document.getElementById('tabLogin').classList.remove('active');document.getElementById('tabSignup').classList.remove('active');document.getElementById('tabBar').style.display='flex';var h=document.getElementById('authHeader');if(t==='login'){document.getElementById('loginPanel').classList.add('active');document.getElementById('tabLogin').classList.add('active');h.innerHTML='<h1 class="auth-title">Welcome back</h1><p class="auth-sub">Log in to continue your learning journey</p>';document.title='Path Engine — Sign In'}else{document.getElementById('signupPanel').classList.add('active');document.getElementById('tabSignup').classList.add('active');h.innerHTML='<h1 class="auth-title">Create your account</h1><p class="auth-sub">Start your personalized AI learning journey</p>';document.title='Path Engine — Sign Up'}}
+function showOTPPanel(email){hideAllPanels();document.getElementById('tabBar').style.display='none';document.getElementById('authHeader').innerHTML='';document.getElementById('otpPanel').classList.add('active');document.getElementById('otpEmail').textContent=email;signupEmail=email;document.querySelectorAll('.otp-box')[0].focus()}
+function backFromOTP(){switchTab('signup')}
+function showForgotPassword(){hideAllPanels();document.getElementById('tabBar').style.display='none';document.getElementById('authHeader').innerHTML='<h1 class="auth-title">Reset password</h1><p class="auth-sub">We\'ll send a link to reset your password</p>';document.getElementById('forgotPanel').classList.add('active')}
 function togglePassword(id,btn){var i=document.getElementById(id);if(i.type==='password'){i.type='text';btn.textContent='Hide'}else{i.type='password';btn.textContent='Show'}}
 function checkPasswordStrength(pw){var f=document.getElementById('strengthFill'),t=document.getElementById('strengthText'),s=0;if(pw.length>=8)s++;if(/[a-z]/.test(pw)&&/[A-Z]/.test(pw))s++;if(/\d/.test(pw))s++;if(/[^a-zA-Z0-9]/.test(pw))s++;if(!pw){f.style.width='0%';f.style.background='transparent';t.textContent=''}else if(s<=1){f.style.width='33%';f.style.background='#ef4444';t.textContent='Weak';t.style.color='#ef4444'}else if(s<=2){f.style.width='66%';f.style.background='#f59e0b';t.textContent='Medium';t.style.color='#f59e0b'}else{f.style.width='100%';f.style.background='#10b981';t.textContent='Strong';t.style.color='#10b981'}}
 function checkPasswordMatch(){var pw=document.getElementById('signupPassword').value,c=document.getElementById('signupConfirm').value,err=document.getElementById('signupConfirmError'),inp=document.getElementById('signupConfirm');if(!c){err.classList.remove('show');inp.classList.remove('error','success');return}if(pw!==c){err.textContent='Passwords do not match';err.classList.add('show');inp.classList.add('error');inp.classList.remove('success')}else{err.classList.remove('show');inp.classList.remove('error');inp.classList.add('success')}}
@@ -286,20 +187,78 @@ function showSuccess(m){var e=document.getElementById('formSuccess');e.textConte
 function setLoading(id,l){var b=document.getElementById(id);if(l){b.classList.add('loading');b.disabled=true}else{b.classList.remove('loading');b.disabled=false}}
 function validateEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)}
 function validatePassword(p){if(p.length<8)return'Min 8 characters';if(!/[a-z]/.test(p))return'Needs lowercase';if(!/[A-Z]/.test(p))return'Needs uppercase';if(!/\d/.test(p))return'Needs a number';return null}
-async function handleLogin(){var email=document.getElementById('loginEmail').value.trim(),pw=document.getElementById('loginPassword').value;document.getElementById('formError').classList.remove('show');document.querySelectorAll('.error-msg').forEach(function(e){e.classList.remove('show')});if(!email){document.getElementById('loginEmailError').textContent='Email is required';document.getElementById('loginEmailError').classList.add('show');return}if(!validateEmail(email)){document.getElementById('loginEmailError').textContent='Enter a valid email';document.getElementById('loginEmailError').classList.add('show');return}if(!pw){document.getElementById('loginPasswordError').textContent='Password is required';document.getElementById('loginPasswordError').classList.add('show');return}setLoading('loginBtn',true);var res=await signIn(email,pw);setLoading('loginBtn',false);if(res.error){showError(res.error.message);return}var u=res.data.user,done=await isAcademicProfileComplete(u.id);if(!done)window.location.href='/pages/academic-profile.html';else window.location.href='/pages/dashboard.html'}
-async function handleSignup(){var name=document.getElementById('signupName').value.trim(),email=document.getElementById('signupEmail').value.trim(),pw=document.getElementById('signupPassword').value,conf=document.getElementById('signupConfirm').value,domain=document.getElementById('signupDomain').value,skill=document.getElementById('signupSkillLevel').value;document.getElementById('formError').classList.remove('show');document.querySelectorAll('.error-msg').forEach(function(e){e.classList.remove('show')});var ok=true;if(!name||name.length<2){document.getElementById('signupNameError').textContent='Enter your full name';document.getElementById('signupNameError').classList.add('show');ok=false}if(!email){document.getElementById('signupEmailError').textContent='Email is required';document.getElementById('signupEmailError').classList.add('show');ok=false}else if(!validateEmail(email)){document.getElementById('signupEmailError').textContent='Enter a valid email';document.getElementById('signupEmailError').classList.add('show');ok=false}var pe=validatePassword(pw);if(pe){document.getElementById('signupPasswordError').textContent=pe;document.getElementById('signupPasswordError').classList.add('show');ok=false}if(pw!==conf){document.getElementById('signupConfirmError').textContent='Passwords do not match';document.getElementById('signupConfirmError').classList.add('show');ok=false}if(!domain){document.getElementById('signupDomainError').textContent='Please select a domain';document.getElementById('signupDomainError').classList.add('show');ok=false}if(!skill){document.getElementById('signupSkillError').textContent='Select your skill level';document.getElementById('signupSkillError').classList.add('show');ok=false}if(!ok)return;setLoading('signupBtn',true);var res=await signUp(email,pw,name,domain,skill);setLoading('signupBtn',false);if(res.error){showError(res.error.message);return}showSuccess('Account created! Check your email to verify, then log in.')}
+
+function otpNext(el,idx){el.value=el.value.replace(/[^0-9]/g,'');if(el.value&&idx<5)document.querySelectorAll('.otp-box')[idx+1].focus();if(idx===5&&el.value)handleVerifyOTP()}
+function otpBack(e,idx){if(e.key==='Backspace'&&!e.target.value&&idx>0)document.querySelectorAll('.otp-box')[idx-1].focus()}
+function getOTPCode(){var code='';document.querySelectorAll('.otp-box').forEach(function(b){code+=b.value});return code}
+
+async function handleLogin(){
+  var email=document.getElementById('loginEmail').value.trim(),pw=document.getElementById('loginPassword').value;
+  document.getElementById('formError').classList.remove('show');document.querySelectorAll('.error-msg').forEach(function(e){e.classList.remove('show')});
+  if(!email){document.getElementById('loginEmailError').textContent='Email is required';document.getElementById('loginEmailError').classList.add('show');return}
+  if(!validateEmail(email)){document.getElementById('loginEmailError').textContent='Enter a valid email';document.getElementById('loginEmailError').classList.add('show');return}
+  if(!pw){document.getElementById('loginPasswordError').textContent='Password is required';document.getElementById('loginPasswordError').classList.add('show');return}
+  setLoading('loginBtn',true);var res=await signIn(email,pw);setLoading('loginBtn',false);
+  if(res.error){showError(res.error.message);return}
+  await smartRedirect();
+}
+
+async function handleSignup(){
+  var name=document.getElementById('signupName').value.trim(),email=document.getElementById('signupEmail').value.trim(),pw=document.getElementById('signupPassword').value,conf=document.getElementById('signupConfirm').value,domain=document.getElementById('signupDomain').value,skill=document.getElementById('signupSkillLevel').value;
+  document.getElementById('formError').classList.remove('show');document.querySelectorAll('.error-msg').forEach(function(e){e.classList.remove('show')});
+  var ok=true;
+  if(!name||name.length<2){document.getElementById('signupNameError').textContent='Enter your full name';document.getElementById('signupNameError').classList.add('show');ok=false}
+  if(!email){document.getElementById('signupEmailError').textContent='Email is required';document.getElementById('signupEmailError').classList.add('show');ok=false}else if(!validateEmail(email)){document.getElementById('signupEmailError').textContent='Enter a valid email';document.getElementById('signupEmailError').classList.add('show');ok=false}
+  var pe=validatePassword(pw);if(pe){document.getElementById('signupPasswordError').textContent=pe;document.getElementById('signupPasswordError').classList.add('show');ok=false}
+  if(pw!==conf){document.getElementById('signupConfirmError').textContent='Passwords do not match';document.getElementById('signupConfirmError').classList.add('show');ok=false}
+  if(!domain){document.getElementById('signupDomainError').textContent='Please select a domain';document.getElementById('signupDomainError').classList.add('show');ok=false}
+  if(!skill){document.getElementById('signupSkillError').textContent='Select your skill level';document.getElementById('signupSkillError').classList.add('show');ok=false}
+  if(!ok)return;
+  setLoading('signupBtn',true);
+  var res=await signUpWithOTP(email,pw,name,domain,skill);
+  setLoading('signupBtn',false);
+  if(res.error){showError(res.error.message);return}
+  showOTPPanel(email);
+}
+
+async function handleVerifyOTP(){
+  var code=getOTPCode();
+  if(code.length!==6){showError('Please enter all 6 digits');return}
+  setLoading('otpBtn',true);
+  var res=await verifyOTP(signupEmail,code);
+  setLoading('otpBtn',false);
+  if(res.error){showError(res.error.message);return}
+  showSuccess('Email verified! Redirecting...');
+  setTimeout(function(){smartRedirect()},1500);
+}
+
+async function handleResendOTP(){
+  var res=await sendOTP(signupEmail);
+  if(res.error){showError(res.error.message)}else{showSuccess('New code sent! Check your email.')}
+}
+
 async function handleGoogleSignIn(){var res=await signInWithGoogle();if(res.error)showError(res.error.message)}
-async function handleForgotPassword(){var email=document.getElementById('forgotEmail').value.trim();if(!email||!validateEmail(email)){document.getElementById('forgotEmailError').textContent='Enter a valid email';document.getElementById('forgotEmailError').classList.add('show');return}setLoading('forgotBtn',true);var res=await supabase.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/pages/auth.html'});setLoading('forgotBtn',false);if(res.error)showError(res.error.message);else showSuccess('Reset link sent! Check your email.')}
-(async function(){var s=await getSession();if(s){var d=await isAcademicProfileComplete(s.user.id);if(!d)window.location.href='/pages/academic-profile.html';else window.location.href='/pages/dashboard.html'}})();
+
+async function handleForgotPassword(){
+  var email=document.getElementById('forgotEmail').value.trim();
+  if(!email||!validateEmail(email)){document.getElementById('forgotEmailError').textContent='Enter a valid email';document.getElementById('forgotEmailError').classList.add('show');return}
+  setLoading('forgotBtn',true);var res=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/pages/auth.html'});setLoading('forgotBtn',false);
+  if(res.error)showError(res.error.message);else showSuccess('Reset link sent! Check your email.');
+}
+
 function exitToHome(e){
   e.preventDefault();
   var overlay=document.getElementById('exitOverlay');
-  var page=document.querySelector('.page');
-  page.style.transition='opacity .8s ease';
-  page.style.opacity='0';
+  document.querySelector('.page').style.transition='opacity .8s ease';
+  document.querySelector('.page').style.opacity='0';
   setTimeout(function(){overlay.classList.add('active')},300);
   setTimeout(function(){window.location.href='/'},1400);
 }
+
+(async function(){
+  var s=await getSession();
+  if(s){await smartRedirect()}
+})();
 </script>
 </body>
 </html>

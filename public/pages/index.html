@@ -638,5 +638,19 @@ a{text-decoration:none;color:inherit}
   };
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-client.js"></script>
+<script>
+(async function(){
+  var s=await getSession();
+  if(s){
+    var wb=document.createElement('div');
+    wb.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:12px;padding:16px 28px;display:flex;align-items:center;gap:16px;animation:fadeUp .6s ease;backdrop-filter:blur(20px)';
+    var name=s.user.user_metadata.full_name||s.user.user_metadata.name||s.user.email.split('@')[0];
+    wb.innerHTML='<div style="font-size:14px;color:#fff"><span style="color:rgba(255,255,255,0.5)">Welcome back,</span> <strong>'+name+'</strong></div><button onclick="smartRedirect()" style="padding:8px 20px;border-radius:8px;background:#10b981;color:#030305;border:none;font-weight:600;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Continue</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:18px;padding:0 4px">&times;</button>';
+    document.body.appendChild(wb);
+  }
+})();
+</script>
 </body>
 </html>
