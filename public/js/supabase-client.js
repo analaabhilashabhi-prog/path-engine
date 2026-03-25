@@ -4,10 +4,51 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Sign up with email — sends OTP instead of password-based signup
+// CORE FIX: Ensure profile exists before ANY database operation
+// This runs every time a user is detected — if profile missing, creates it
+async function ensureProfile(user) {
+  if (!user) return;
+  
+  var { data } = await supabaseClient
+    .from('profiles')
+    .select('id')
+    .eq('id', user.id)
+    .single();
+  
+  if (!data) {
+    var name = user.user_metadata.full_name || user.user_metadata.name || user.email.split('@')[0];
+    var domain = user.user_metadata.domain || '';
+    var skill = user.user_metadata.skill_level || '';
+    
+    await supabaseClient.from('profiles').insert({
+      id: user.id,
+      full_name: name,
+      email: user.email,
+      domain: domain,
+      skill_level: skill
+    });
+  }
+  
+  var { data: deadline } = await supabaseClient
+    .from('assessment_deadlines')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+  
+  if (!deadline) {
+    var deadlineDate = new Date();
+    deadlineDate.setDate(deadlineDate.getDate() + 5);
+    
+    await supabaseClient.from('assessment_deadlines').insert({
+      user_id: user.id,
+      deadline_date: deadlineDate.toISOString()
+    });
+  }
+}
+
+// Sign up with email
 async function signUpWithOTP(email, password, fullName, domain, skillLevel) {
-  // First create the account with password
-  const { data, error } = await supabaseClient.auth.signUp({
+  var { data, error } = await supabaseClient.auth.signUp({
     email: email,
     password: password,
     options: {
@@ -22,39 +63,43 @@ async function signUpWithOTP(email, password, fullName, domain, skillLevel) {
   return { data, error };
 }
 
-// Send OTP to email for verification
+// Send OTP
 async function sendOTP(email) {
-  const { data, error } = await supabaseClient.auth.signInWithOtp({
+  var { data, error } = await supabaseClient.auth.signInWithOtp({
     email: email,
-    options: {
-      shouldCreateUser: false
-    }
+    options: { shouldCreateUser: false }
   });
   return { data, error };
 }
 
-// Verify OTP code
+// Verify OTP
 async function verifyOTP(email, token) {
-  const { data, error } = await supabaseClient.auth.verifyOtp({
+  var { data, error } = await supabaseClient.auth.verifyOtp({
     email: email,
     token: token,
     type: 'email'
   });
+  if (data && data.user) {
+    await ensureProfile(data.user);
+  }
   return { data, error };
 }
 
-// Sign in with email + password
+// Sign in with password
 async function signIn(email, password) {
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
+  var { data, error } = await supabaseClient.auth.signInWithPassword({
     email: email,
     password: password
   });
+  if (data && data.user) {
+    await ensureProfile(data.user);
+  }
   return { data, error };
 }
 
 // Google sign in
 async function signInWithGoogle() {
-  const { data, error } = await supabaseClient.auth.signInWithOAuth({
+  var { data, error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: window.location.origin + '/pages/academic-profile.html'
@@ -65,36 +110,39 @@ async function signInWithGoogle() {
 
 // Sign out
 async function signOut() {
-  const { error } = await supabaseClient.auth.signOut();
+  var { error } = await supabaseClient.auth.signOut();
   return { error };
 }
 
 // Get current user
 async function getUser() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
+  var { data: { user } } = await supabaseClient.auth.getUser();
   return user;
 }
 
-// Get current session
+// Get current session — also ensures profile exists
 async function getSession() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  var { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    await ensureProfile(session.user);
+  }
   return session;
 }
 
-// Check if user has domain set (Google users might not)
+// Check if user has domain set
 async function hasDomainSet(userId) {
-  const { data, error } = await supabaseClient
+  var { data } = await supabaseClient
     .from('profiles')
     .select('domain')
     .eq('id', userId)
     .single();
-  if (error || !data) return false;
+  if (!data) return false;
   return data.domain && data.domain.length > 0;
 }
 
 // Update profile with domain and skill level
 async function updateProfileBasics(userId, domain, skillLevel) {
-  const { data, error } = await supabaseClient
+  var { data, error } = await supabaseClient
     .from('profiles')
     .update({ domain: domain, skill_level: skillLevel, updated_at: new Date().toISOString() })
     .eq('id', userId);
@@ -103,27 +151,26 @@ async function updateProfileBasics(userId, domain, skillLevel) {
 
 // Check if academic profile is completed
 async function isAcademicProfileComplete(userId) {
-  const { data, error } = await supabaseClient
+  var { data } = await supabaseClient
     .from('academic_profiles')
     .select('completed')
     .eq('user_id', userId)
     .single();
-  if (error || !data) return false;
+  if (!data) return false;
   return data.completed === true;
 }
 
 // Get assessment deadline status
 async function getDeadlineStatus(userId) {
-  const { data, error } = await supabaseClient
+  var { data } = await supabaseClient
     .from('assessment_deadlines')
     .select('*')
     .eq('user_id', userId)
     .single();
-  if (error || !data) return null;
   return data;
 }
 
-// Figure out where user should go based on their state
+// Figure out where user should go
 async function getUserState() {
   var session = await getSession();
   if (!session) return 'not_logged_in';
@@ -135,16 +182,11 @@ async function getUserState() {
   return 'ready_for_dashboard';
 }
 
-// Redirect user to the right page based on state
+// Smart redirect
 async function smartRedirect() {
   var state = await getUserState();
-  if (state === 'not_logged_in') {
-    window.location.href = '/pages/auth.html';
-  } else if (state === 'needs_basics') {
-    window.location.href = '/pages/academic-profile.html';
-  } else if (state === 'needs_academic_profile') {
-    window.location.href = '/pages/academic-profile.html';
-  } else {
-    window.location.href = '/pages/dashboard.html';
-  }
+  if (state === 'not_logged_in') window.location.href = '/pages/auth.html';
+  else if (state === 'needs_basics') window.location.href = '/pages/academic-profile.html';
+  else if (state === 'needs_academic_profile') window.location.href = '/pages/academic-profile.html';
+  else window.location.href = '/pages/dashboard.html';
 }
