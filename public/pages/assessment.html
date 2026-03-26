@@ -147,6 +147,26 @@ body::-webkit-scrollbar{display:none}
 .loading-screen p{font-size:15px;color:var(--text-2);margin-bottom:16px}
 .loading-screen .sub{font-size:12px;color:var(--text-3);margin-top:8px}
 
+/* Webcam */
+.webcam-box{position:fixed;bottom:20px;left:20px;z-index:50;width:160px;height:120px;border-radius:12px;overflow:hidden;border:2px solid var(--border);display:none;background:#000}
+.webcam-box.active{display:block}
+.webcam-box video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.webcam-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--accent);animation:camPulse 2s ease infinite}
+.webcam-status{position:absolute;bottom:0;left:0;right:0;padding:4px 8px;font-size:9px;font-weight:600;text-align:center;text-transform:uppercase;letter-spacing:1px}
+.webcam-status.ok{background:rgba(16,185,129,0.8);color:#030305}
+.webcam-status.warn{background:rgba(245,158,11,0.8);color:#030305}
+.webcam-status.danger{background:rgba(239,68,68,0.8);color:#fff}
+@keyframes camPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.cam-request{text-align:center;padding:16px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;opacity:0}
+.cam-request.show{animation:fadeUp .5s ease forwards}
+.cam-request p{font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6}
+.cam-btn{padding:10px 24px;border-radius:var(--radius);font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-body);transition:all .3s}
+.cam-btn-allow{background:var(--accent);color:#030305;margin-right:8px}
+.cam-btn-allow:hover{background:var(--accent-light)}
+.cam-status-text{font-size:12px;margin-top:10px;font-weight:500}
+.cam-status-text.granted{color:var(--accent)}
+.cam-status-text.denied{color:var(--danger)}
+
 @media(max-width:900px){.content-wrapper{width:100%;max-width:100%;position:relative;right:0;height:auto;min-height:100vh;padding:120px 24px 40px}#orb-container{position:fixed;opacity:0.2}.logo-mark{top:20px;left:20px}.logo-mark img{width:48px;height:48px}.logo-mark span{font-size:20px}}
 @media(max-width:480px){.content-wrapper{padding:100px 18px 32px}.lobby-title{font-size:24px}.skill-name{font-size:24px}.quiz-question{font-size:15px}.logo-mark{top:16px;left:16px}.logo-mark img{width:40px;height:40px}.logo-mark span{font-size:17px}}
 </style>
@@ -156,6 +176,8 @@ body::-webkit-scrollbar{display:none}
 <div id="orb-container"></div>
 <div class="logo-mark"><img src="https://i.ibb.co/nMFjJgcZ/logo-png.png" alt=""><div style="width:1px;height:36px;background:rgba(255,255,255,0.15)"></div><span>Path <span class="acc">Engine</span></span></div>
 <div class="toast" id="toast"></div>
+<div class="webcam-box" id="webcamBox"><video id="webcamVideo" autoplay playsinline muted></video><div class="webcam-dot"></div><div class="webcam-status ok" id="webcamStatus">Face detected</div></div>
+<canvas id="faceCanvas" style="display:none"></canvas>
 <div class="disconnect-overlay" id="disconnectOverlay"><p>Connection lost</p><p class="sub">Waiting to reconnect...</p><div class="loading-dots"><span></span><span></span><span></span></div></div>
 <div class="warning-overlay" id="warningOverlay"><h2>⚠ Warning</h2><p id="warningMsg">You switched tabs or exited fullscreen. This is your first warning. One more and your quiz will be auto-submitted.</p><button onclick="dismissWarning()">I understand, continue</button></div>
 
@@ -176,6 +198,13 @@ body::-webkit-scrollbar{display:none}
 </div>
 <div class="lobby-layers" id="lobbyLayers"><div class="layer-pill on">Self evaluation</div><div class="layer-pill">Skill quiz</div><div class="layer-pill">Goals</div><div class="layer-pill">AI chat</div></div>
 <div class="lobby-time" id="lobbyTime">Estimated time: <span>~15-20 minutes</span></div>
+
+<div class="cam-request" id="camRequest">
+<p>📷 We need camera access to verify your identity during the quiz. This is mandatory.</p>
+<button class="cam-btn cam-btn-allow" onclick="requestCamera()">Allow Camera</button>
+<div class="cam-status-text" id="camStatus"></div>
+</div>
+
 <div class="pledge-box" id="pledgeBox" onclick="togglePledge()"><div class="pledge-row"><div class="pledge-check" id="pledgeCheck"></div><div class="pledge-label">I'll answer honestly — better answers mean a better roadmap built for me.</div></div></div>
 <button class="btn-main show-anim" id="btnStart" disabled onclick="startAssessment()">I'm Ready</button>
 </div>
@@ -218,6 +247,16 @@ body::-webkit-scrollbar{display:none}
 <div class="loading-screen"><p>AI is generating your personalized quiz...</p><div class="loading-dots"><span></span><span></span><span></span></div><p class="sub">This takes about 10-15 seconds</p></div>
 </div>
 
+<!-- RESTART VIOLATION -->
+<div class="section" id="restartSection">
+<div style="text-align:center;padding:40px 0">
+<h2 style="font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--danger);margin-bottom:12px">⚠ Proctoring Violation</h2>
+<p style="font-size:15px;color:var(--text-2);margin-bottom:8px;line-height:1.7">Reason: <strong id="restartReason" style="color:var(--text-1)"></strong></p>
+<p style="font-size:13px;color:var(--text-3);margin-bottom:28px">Restart <span id="restartNum">1</span> of <span id="restartMax">2</span>. Your quiz will restart with completely new questions.</p>
+<button class="btn-main" onclick="restartQuizWithNewQuestions()" style="background:var(--danger)">Restart Quiz with New Questions</button>
+</div>
+</div>
+
 <!-- QUIZ COMPLETE -->
 <div class="section" id="quizCompleteSection">
 <div style="text-align:center;padding:40px 0">
@@ -233,6 +272,7 @@ body::-webkit-scrollbar{display:none}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/supabase-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){var c=document.getElementById('orb-container');var r=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setSize(window.innerWidth,window.innerHeight);r.setPixelRatio(Math.min(window.devicePixelRatio,2));r.setClearColor(0x030305,1);c.appendChild(r.domElement);var fs=14,asp=window.innerWidth/window.innerHeight;var cam=new THREE.OrthographicCamera(-fs*asp/2,fs*asp/2,fs/2,-fs/2,0.1,100);cam.position.z=20;var sc=new THREE.Scene();var R=6.8,N=5500;var bp=new Float32Array(N*3),cp=new Float32Array(N*3),al=new Float32Array(N),sz=new Float32Array(N);var g=(1+Math.sqrt(5))/2;for(var i=0;i<N;i++){var t=2*Math.PI*i/g,p=Math.acos(1-2*(i+0.5)/N);bp[i*3]=R*Math.cos(t)*Math.sin(p);bp[i*3+1]=R*Math.sin(t)*Math.sin(p);bp[i*3+2]=R*Math.cos(p);cp[i*3]=bp[i*3];cp[i*3+1]=bp[i*3+1];cp[i*3+2]=bp[i*3+2];var eq=Math.abs(p-Math.PI/2)/(Math.PI/2);al[i]=(0.18+Math.random()*0.5)*Math.max(0.06,1-Math.pow(eq,1.4)*0.9);sz[i]=2.6*(0.6+Math.random()*0.4)}var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(cp,3));geo.setAttribute('alpha',new THREE.BufferAttribute(al,1));geo.setAttribute('size',new THREE.BufferAttribute(sz,1));var mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:false,uniforms:{uTime:{value:0}},vertexShader:'attribute float alpha;attribute float size;varying float vAlpha;varying float vZ;uniform float uTime;void main(){vAlpha=alpha;vec3 pos=position;float breath=sin(uTime*0.2+pos.x+pos.y*1.5+pos.z*1.2)*0.015;pos*=1.0+breath;vec4 mv=modelViewMatrix*vec4(pos,1.0);vZ=pos.z;gl_PointSize=size*1.8;gl_Position=projectionMatrix*mv;}',fragmentShader:'varying float vAlpha;varying float vZ;void main(){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;float edge=1.0-smoothstep(0.25,0.5,d);float zFade=smoothstep(-6.8,4.5,vZ);float a=vAlpha*edge*(0.04+zFade*0.76);gl_FragColor=vec4(1.0,1.0,1.0,a);}'});var sph=new THREE.Points(geo,mat);sc.add(sph);function eX(){return fs*asp/2}sph.position.x=-eX()*0.35;sph.scale.setScalar(1.1);var mN=new THREE.Vector2(-10,-10),mW=new THREE.Vector3(-10,-10,0),rmx=-10,rmy=-10;window.addEventListener('mousemove',function(e){rmx=(e.clientX/window.innerWidth)*2-1;rmy=-(e.clientY/window.innerHeight)*2+1});function gms(){var mx=mN.x*eX(),my=mN.y*(fs/2),lx=(mx-sph.position.x)/1.1,ly=(my-sph.position.y)/1.1,d2=lx*lx+ly*ly;if(d2>R*R){mW.set(lx,ly,0);return}mW.set(lx,ly,Math.sqrt(R*R-d2))}var ry=0;function anim(time){var ti=time*0.001;mat.uniforms.uTime.value=ti;ry+=0.0004;sph.rotation.y=ry;sph.rotation.x=Math.sin(ti*0.08)*0.03;mN.x+=(rmx-mN.x)*0.4;mN.y+=(rmy-mN.y)*0.4;gms();for(var i=0;i<N;i++){var bx=bp[i*3],by=bp[i*3+1],bz=bp[i*3+2],dx=bx-mW.x,dy=by-mW.y,dz=bz-mW.z,dist=Math.sqrt(dx*dx+dy*dy+dz*dz),tx=bx,ty=by,tz=bz;if(dist<2&&dist>0.01){var t2=dist/2,f=(1-t2)*(1-t2)*0.55;if(f>0.8)f=0.8;tx=bx+(dx/dist)*f;ty=by+(dy/dist)*f;tz=bz+(dz/dist)*f}cp[i*3]+=(tx-cp[i*3])*0.1;cp[i*3+1]+=(ty-cp[i*3+1])*0.1;cp[i*3+2]+=(tz-cp[i*3+2])*0.1}geo.attributes.position.needsUpdate=true;r.render(sc,cam);requestAnimationFrame(anim)}anim(0);window.addEventListener('resize',function(){asp=window.innerWidth/window.innerHeight;cam.left=-fs*asp/2;cam.right=fs*asp/2;cam.top=fs/2;cam.bottom=-fs/2;cam.updateProjectionMatrix();r.setSize(window.innerWidth,window.innerHeight);sph.position.x=-eX()*0.35})})();
@@ -243,6 +283,16 @@ var questions=[],currentQIdx=0,answers={},quizTimer=null,timeLeft=0,tabWarnings=
 var behaviorLog=[];
 var questionStartTime=0;
 var mouseLeaveCount=0;
+var cameraGranted=false;
+var webcamStream=null;
+var faceDetectionInterval=null;
+var noFaceCount=0;
+var multiFaceCount=0;
+var noFaceStreak=0;
+var faceWarningGiven=false;
+var faceApiLoaded=false;
+var restartCount=0;
+var maxRestarts=2;
 var levels=[{value:1,label:'Never heard of it'},{value:2,label:'Heard of it, never used'},{value:3,label:'Know the basics'},{value:4,label:'Comfortable using it'},{value:5,label:'Can teach others'}];
 
 // Shuffle options and update correct index
@@ -291,6 +341,19 @@ function analyzeBehavior(){
   var lowRatedSkills=Object.entries(ratings).filter(function(e){return e[1]<=2}).length;
   if(lowRatedSkills>=4&&scorePercent>90){confidenceScore-=10;flags.push('Self-rated low but scored '+scorePercent+'%')}
   
+  // Check 7: Face not detected frequently
+  if(noFaceCount>=10){confidenceScore-=15;flags.push('Face not detected '+noFaceCount+' times')}
+  else if(noFaceCount>=5){confidenceScore-=8;flags.push('Face absent '+noFaceCount+' times')}
+  
+  // Check 8: Multiple faces detected
+  if(multiFaceCount>0){confidenceScore-=25;flags.push('Multiple faces detected '+multiFaceCount+' time(s)')}
+  
+  // Check 9: Quiz was restarted
+  if(restartCount>0){confidenceScore-=15*restartCount;flags.push('Quiz restarted '+restartCount+' time(s) due to violations')}
+  
+  // Check 10: Camera not granted
+  if(!cameraGranted){confidenceScore-=20;flags.push('Camera permission denied')}
+  
   if(confidenceScore<0)confidenceScore=0;
   if(confidenceScore>100)confidenceScore=100;
   
@@ -308,6 +371,99 @@ document.addEventListener('mouseleave',function(){
   mouseLeaveCount++;
   behaviorLog.push({event:'mouse_leave',question:currentQIdx+1,count:mouseLeaveCount,time:new Date().toISOString()});
 });
+
+// Camera request
+async function requestCamera(){
+  var status=document.getElementById('camStatus');
+  try{
+    webcamStream=await navigator.mediaDevices.getUserMedia({video:{width:320,height:240,facingMode:'user'},audio:false});
+    document.getElementById('webcamVideo').srcObject=webcamStream;
+    cameraGranted=true;
+    status.textContent='✓ Camera granted. Loading face detection...';
+    status.className='cam-status-text granted';
+    await loadFaceApi();
+    checkStartReady();
+  }catch(err){
+    cameraGranted=false;
+    status.textContent='✗ Camera denied — camera is REQUIRED';
+    status.className='cam-status-text denied';
+  }
+}
+
+function showWebcam(){if(!cameraGranted)return;document.getElementById('webcamBox').classList.add('active');startFaceDetection()}
+function hideWebcam(){document.getElementById('webcamBox').classList.remove('active');stopFaceDetection()}
+
+async function loadFaceApi(){
+  var status=document.getElementById('camStatus');
+  try{
+    await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights');
+    faceApiLoaded=true;
+    status.textContent='✓ Camera ready. Face detection loaded.';
+    status.className='cam-status-text granted';
+  }catch(err){
+    console.log('Face API load error:',err);
+    status.textContent='✓ Camera ready (basic mode)';
+    status.className='cam-status-text granted';
+  }
+}
+
+function startFaceDetection(){
+  var video=document.getElementById('webcamVideo');
+  faceDetectionInterval=setInterval(async function(){
+    if(!quizActive)return;
+    var statusEl=document.getElementById('webcamStatus');
+    if(faceApiLoaded){
+      try{
+        var detections=await faceapi.detectAllFaces(video,new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.4}));
+        var fc=detections.length;
+        if(fc===1){noFaceStreak=0;faceWarningGiven=false;statusEl.textContent='Face detected';statusEl.className='webcam-status ok'}
+        else if(fc===0){
+          noFaceStreak++;noFaceCount++;
+          behaviorLog.push({event:'no_face',question:currentQIdx+1,streak:noFaceStreak,time:new Date().toISOString()});
+          if(noFaceStreak>=3&&!faceWarningGiven){faceWarningGiven=true;statusEl.textContent='WARNING!';statusEl.className='webcam-status danger';showToast('⚠ Face not detected! Stay in front of camera. Next = test restart.','danger')}
+          else if(noFaceStreak>=6&&faceWarningGiven){statusEl.textContent='VIOLATION!';statusEl.className='webcam-status danger';handleProctorViolation('Face not detected for too long')}
+          else{statusEl.textContent='No face!';statusEl.className='webcam-status danger'}
+        }else if(fc>=2){
+          multiFaceCount++;
+          behaviorLog.push({event:'multiple_faces',question:currentQIdx+1,count:fc,time:new Date().toISOString()});
+          statusEl.textContent='MULTIPLE FACES!';statusEl.className='webcam-status danger';
+          handleProctorViolation('Multiple faces detected ('+fc+' faces) — ZERO TOLERANCE');
+        }
+      }catch(err){console.log('Face detect err:',err)}
+    }else{
+      var canvas=document.getElementById('faceCanvas');var ctx=canvas.getContext('2d');canvas.width=320;canvas.height=240;
+      ctx.drawImage(video,0,0,320,240);var id=ctx.getImageData(80,40,160,160);var px=id.data;var bp=0;var tp=px.length/4;
+      for(var i=0;i<px.length;i+=4){if((px[i]+px[i+1]+px[i+2])/3>60)bp++}
+      if(bp/tp>0.15){noFaceStreak=0;faceWarningGiven=false;statusEl.textContent='Face detected';statusEl.className='webcam-status ok'}
+      else{noFaceStreak++;noFaceCount++;
+        if(noFaceStreak>=3&&!faceWarningGiven){faceWarningGiven=true;showToast('⚠ Stay in front of the camera!','danger')}
+        else if(noFaceStreak>=6&&faceWarningGiven){handleProctorViolation('Face not detected')}
+        statusEl.textContent='No face!';statusEl.className='webcam-status danger'}
+    }
+  },2000);
+}
+
+function handleProctorViolation(reason){
+  restartCount++;
+  behaviorLog.push({event:'proctor_violation',reason:reason,restartCount:restartCount,time:new Date().toISOString()});
+  if(restartCount>maxRestarts){showToast('Max violations exceeded. Quiz auto-submitted.','danger');autoSubmitQuiz();return}
+  quizActive=false;if(quizTimer)clearInterval(quizTimer);stopFaceDetection();
+  showSection('restartSection');
+  document.getElementById('restartReason').textContent=reason;
+  document.getElementById('restartNum').textContent=restartCount;
+  document.getElementById('restartMax').textContent=maxRestarts;
+}
+
+async function restartQuizWithNewQuestions(){
+  showSection('quizLoadingSection');
+  document.querySelector('#quizLoadingSection .loading-screen p').textContent='Generating new questions (restart '+restartCount+'/'+maxRestarts+')...';
+  questions=[];currentQIdx=0;answers={};noFaceStreak=0;faceWarningGiven=false;
+  await generateQuiz();
+}
+
+function stopFaceDetection(){if(faceDetectionInterval){clearInterval(faceDetectionInterval);faceDetectionInterval=null}}
+function stopWebcam(){hideWebcam();if(webcamStream){webcamStream.getTracks().forEach(function(t){t.stop()});webcamStream=null}}
+function checkStartReady(){var ready=pledgeChecked&&cameraGranted;document.getElementById('btnStart').disabled=!ready}
 
 // Tab switch detection
 document.addEventListener('visibilitychange',function(){
@@ -342,8 +498,8 @@ function showToast(msg,type){var t=document.getElementById('toast');t.textConten
 function showSection(id){document.querySelectorAll('.section').forEach(function(s){s.classList.remove('show')});document.getElementById(id).classList.add('show')}
 
 // LOBBY
-function animateLobby(){var rules=document.querySelectorAll('.rule-item');rules.forEach(function(r){var d=parseInt(r.getAttribute('data-delay'));setTimeout(function(){r.classList.add('show')},d)});setTimeout(function(){document.getElementById('lobbyLayers').classList.add('show')},1800);setTimeout(function(){document.getElementById('lobbyTime').classList.add('show')},2100);setTimeout(function(){document.getElementById('pledgeBox').classList.add('show')},2400);setTimeout(function(){document.getElementById('btnStart').classList.add('show')},2700)}
-function togglePledge(){pledgeChecked=!pledgeChecked;document.getElementById('pledgeBox').classList.toggle('checked',pledgeChecked);document.getElementById('btnStart').disabled=!pledgeChecked}
+function animateLobby(){var rules=document.querySelectorAll('.rule-item');rules.forEach(function(r){var d=parseInt(r.getAttribute('data-delay'));setTimeout(function(){r.classList.add('show')},d)});setTimeout(function(){document.getElementById('lobbyLayers').classList.add('show')},1800);setTimeout(function(){document.getElementById('lobbyTime').classList.add('show')},2100);setTimeout(function(){document.getElementById('camRequest').classList.add('show')},2400);setTimeout(function(){document.getElementById('pledgeBox').classList.add('show')},2800);setTimeout(function(){document.getElementById('btnStart').classList.add('show')},3200)}
+function togglePledge(){pledgeChecked=!pledgeChecked;document.getElementById('pledgeBox').classList.toggle('checked',pledgeChecked);checkStartReady()}
 async function startAssessment(){showSection('layer1Section');await generateSkills()}
 
 // LAYER 1
@@ -391,6 +547,7 @@ async function generateQuiz(){
   }catch(err){showToast('Error generating quiz.','danger');return}
   document.getElementById('qTotal').textContent=questions.length;
   currentQIdx=0;answers={};quizActive=true;
+  showWebcam();
   showSection('quizSection');
   showQuestion(0);
 }
@@ -440,11 +597,12 @@ function submitAnswer(){
 async function finishQuiz(){
   quizActive=false;
   if(quizTimer)clearInterval(quizTimer);
+  stopWebcam();
   try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
   var score=0;
   questions.forEach(function(q,i){if(answers[i]===q.correct)score++});
   var analysis=analyzeBehavior();
-  try{await supabaseClient.from('assessment_responses').insert({user_id:currentUser.id,layer:'skill_quiz',response_data:{answers:answers,score:score,total:questions.length,tabWarnings:tabWarnings,mouseLeaves:mouseLeaveCount,confidenceScore:analysis.confidenceScore,flags:analysis.flags,behaviorLog:behaviorLog},created_at:new Date().toISOString()})}catch(err){}
+  try{await supabaseClient.from('assessment_responses').insert({user_id:currentUser.id,layer:'skill_quiz',response_data:{answers:answers,score:score,total:questions.length,tabWarnings:tabWarnings,mouseLeaves:mouseLeaveCount,noFaceEvents:noFaceCount,multiFaceEvents:multiFaceCount,restartCount:restartCount,confidenceScore:analysis.confidenceScore,flags:analysis.flags,behaviorLog:behaviorLog},created_at:new Date().toISOString()})}catch(err){}
   showSection('quizCompleteSection');
 }
 
