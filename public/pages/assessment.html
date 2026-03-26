@@ -241,12 +241,73 @@ body::-webkit-scrollbar{display:none}
 var currentUser=null,userDomain='',userEdu='',skills=[],ratings={},currentSkillIdx=0,pledgeChecked=false;
 var questions=[],currentQIdx=0,answers={},quizTimer=null,timeLeft=0,tabWarnings=0,quizActive=false;
 var behaviorLog=[];
+var questionStartTime=0;
+var mouseLeaveCount=0;
 var levels=[{value:1,label:'Never heard of it'},{value:2,label:'Heard of it, never used'},{value:3,label:'Know the basics'},{value:4,label:'Comfortable using it'},{value:5,label:'Can teach others'}];
 
+// Shuffle options and update correct index
+function shuffleOptions(q){
+  var opts=q.options.map(function(o,i){return{text:o,wasCorrect:i===q.correct}});
+  for(var i=opts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var temp=opts[i];opts[i]=opts[j];opts[j]=temp}
+  q.options=opts.map(function(o){return o.text});
+  q.correct=opts.findIndex(function(o){return o.wasCorrect});
+  return q;
+}
+
+// Behavior analysis - generates confidence score
+function analyzeBehavior(){
+  var flags=[];var confidenceScore=100;
+  
+  // Check 1: Too fast answers on hard questions
+  var fastHardCount=0;
+  behaviorLog.filter(function(l){return l.event==='answer_submitted'}).forEach(function(l){
+    var q=questions[l.question-1];
+    if(q&&q.difficulty==='hard'){
+      var timeTaken=q.time-l.timeRemaining;
+      if(timeTaken<5){fastHardCount++;flags.push('Answered hard Q'+l.question+' in '+timeTaken+'s')}
+    }
+  });
+  if(fastHardCount>=3){confidenceScore-=25;flags.push('Multiple hard questions answered suspiciously fast')}
+  
+  // Check 2: All same position selected
+  var positions={};
+  Object.values(answers).forEach(function(a){positions[a]=(positions[a]||0)+1});
+  var maxSamePos=Math.max.apply(null,Object.values(positions));
+  if(maxSamePos>=15){confidenceScore-=20;flags.push('Same option position selected '+maxSamePos+'/20 times')}
+  
+  // Check 3: Tab switches
+  if(tabWarnings>=1){confidenceScore-=15*tabWarnings;flags.push(tabWarnings+' tab switch warning(s)')}
+  
+  // Check 4: Mouse left browser frequently
+  if(mouseLeaveCount>=5){confidenceScore-=10;flags.push('Mouse left browser '+mouseLeaveCount+' times')}
+  
+  // Check 5: Self-rated high but scored low
+  var highRatedSkills=Object.entries(ratings).filter(function(e){return e[1]>=4}).length;
+  var score=0;questions.forEach(function(q,i){if(answers[i]===q.correct)score++});
+  var scorePercent=Math.round((score/questions.length)*100);
+  if(highRatedSkills>=4&&scorePercent<30){confidenceScore-=15;flags.push('Self-rated high but scored '+scorePercent+'%')}
+  
+  // Check 6: Scored perfect but self-rated low
+  var lowRatedSkills=Object.entries(ratings).filter(function(e){return e[1]<=2}).length;
+  if(lowRatedSkills>=4&&scorePercent>90){confidenceScore-=10;flags.push('Self-rated low but scored '+scorePercent+'%')}
+  
+  if(confidenceScore<0)confidenceScore=0;
+  if(confidenceScore>100)confidenceScore=100;
+  
+  return{confidenceScore:confidenceScore,flags:flags};
+}
+
 document.addEventListener('contextmenu',function(e){e.preventDefault()});
-document.addEventListener('keydown',function(e){if(e.ctrlKey&&'cvasCVAS'.indexOf(e.key)!==-1)e.preventDefault()});
+document.addEventListener('keydown',function(e){if(e.ctrlKey&&'cvasCVAS'.indexOf(e.key)!==-1)e.preventDefault();if(e.key==='F12')e.preventDefault();if(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j'))e.preventDefault()});
 window.addEventListener('offline',function(){document.getElementById('disconnectOverlay').classList.add('show');if(quizTimer)clearInterval(quizTimer)});
 window.addEventListener('online',function(){document.getElementById('disconnectOverlay').classList.remove('show');if(quizActive)startTimer(timeLeft)});
+
+// Mouse leave detection - tracks when cursor leaves the browser window
+document.addEventListener('mouseleave',function(){
+  if(!quizActive)return;
+  mouseLeaveCount++;
+  behaviorLog.push({event:'mouse_leave',question:currentQIdx+1,count:mouseLeaveCount,time:new Date().toISOString()});
+});
 
 // Tab switch detection
 document.addEventListener('visibilitychange',function(){
@@ -326,7 +387,7 @@ async function generateQuiz(){
   try{
     var response=await fetch('/api/generate-quiz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:userDomain,education:userEdu,selfRatings:ratings})});
     var data=await response.json();
-    if(data.questions&&data.questions.length>0){questions=data.questions}else{showToast('Failed to generate quiz. Please try again.','danger');return}
+    if(data.questions&&data.questions.length>0){questions=data.questions.map(function(q){return shuffleOptions(q)})}else{showToast('Failed to generate quiz. Please try again.','danger');return}
   }catch(err){showToast('Error generating quiz.','danger');return}
   document.getElementById('qTotal').textContent=questions.length;
   currentQIdx=0;answers={};quizActive=true;
@@ -343,6 +404,7 @@ function showQuestion(idx){
   html+='</div><button class="quiz-submit" id="quizSubmitBtn" disabled onclick="submitAnswer()">Submit & Next →</button></div>';
   area.innerHTML=html;
   behaviorLog.push({event:'question_shown',question:idx+1,time:new Date().toISOString()});
+  questionStartTime=Date.now();
   startTimer(q.time||45);
 }
 
@@ -381,7 +443,8 @@ async function finishQuiz(){
   try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
   var score=0;
   questions.forEach(function(q,i){if(answers[i]===q.correct)score++});
-  try{await supabaseClient.from('assessment_responses').insert({user_id:currentUser.id,layer:'skill_quiz',response_data:{answers:answers,score:score,total:questions.length,tabWarnings:tabWarnings,behaviorLog:behaviorLog},created_at:new Date().toISOString()})}catch(err){}
+  var analysis=analyzeBehavior();
+  try{await supabaseClient.from('assessment_responses').insert({user_id:currentUser.id,layer:'skill_quiz',response_data:{answers:answers,score:score,total:questions.length,tabWarnings:tabWarnings,mouseLeaves:mouseLeaveCount,confidenceScore:analysis.confidenceScore,flags:analysis.flags,behaviorLog:behaviorLog},created_at:new Date().toISOString()})}catch(err){}
   showSection('quizCompleteSection');
 }
 
