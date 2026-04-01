@@ -3,21 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Path Engine — Assessment</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<title>Path Engine - Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#030305;--accent:#10b981;--accent-light:#34d399;--accent-dim:rgba(16,185,129,0.06);--text-1:#fff;--text-2:rgba(255,255,255,0.5);--text-3:rgba(255,255,255,0.25);--border:rgba(255,255,255,0.08);--danger:#ef4444;--warn:#f59e0b;--font-display:'Space Grotesk',sans-serif;--font-body:'Inter',sans-serif;--radius:8px}
+:root{--bg:#030305;--accent:#10b981;--accent-light:#34d399;--accent-dim:rgba(16,185,129,0.06);--text-1:#fff;--text-2:rgba(255,255,255,0.5);--text-3:rgba(255,255,255,0.25);--border:rgba(255,255,255,0.08);--danger:#ef4444;--warn:#f59e0b;--font-display:'Space Grotesk',sans-serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;--radius:8px}
 html{scrollbar-width:none}html::-webkit-scrollbar{display:none}
 body{background:var(--bg);color:var(--text-1);font-family:var(--font-body);margin:0;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
-body::-webkit-scrollbar{display:none}
 ::selection{background:rgba(16,185,129,0.25);color:#fff}
 .page{position:relative;width:100%;height:100vh;background:var(--bg);opacity:0;animation:pageFadeIn .8s ease .2s forwards}
 @keyframes pageFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideRight{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
 @keyframes scaleIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideOutLeft{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-40px)}}
 @keyframes timerPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 20px rgba(239,68,68,0.3)}}
+@keyframes particleBurst{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
+@keyframes gradeReveal{0%{opacity:0;transform:scale(0.3) rotate(-10deg)}50%{opacity:1;transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes barGrow{from{width:0}to{width:var(--target-w)}}
+@keyframes dotPulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+@keyframes camPulse{0%,100%{opacity:1}50%{opacity:0.4}}
 #orb-container{position:absolute;top:0;left:0;width:100%;height:100vh;z-index:1;pointer-events:none}
 #orb-container canvas{pointer-events:auto}
 .logo-mark{position:absolute;top:36px;left:40px;z-index:20;display:flex;align-items:center;gap:16px}
@@ -27,31 +33,28 @@ body::-webkit-scrollbar{display:none}
 .content-wrapper{position:absolute;top:0;right:8%;width:45%;max-width:540px;height:100vh;z-index:10;display:flex;align-items:center;justify-content:center;padding:40px 48px;overflow-y:auto;scrollbar-width:none}
 .content-wrapper::-webkit-scrollbar{display:none}
 .content-inner{width:100%;max-width:440px}
-.disconnect-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(3,3,5,0.95);z-index:1000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
-.disconnect-overlay.show{display:flex}
-.disconnect-overlay p{font-size:16px;font-weight:500}
-.disconnect-overlay .sub{font-size:13px;color:var(--text-2)}
-.loading-dots{display:flex;justify-content:center;gap:6px}
-.loading-dots span{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:dotPulse 1.2s ease infinite}
-.loading-dots span:nth-child(2){animation-delay:.2s}
-.loading-dots span:nth-child(3){animation-delay:.4s}
-@keyframes dotPulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+.watermark{position:fixed;top:0;left:0;width:100%;height:100%;z-index:5;pointer-events:none;overflow:hidden;display:none}
+.watermark.active{display:block}
+.watermark-text{position:absolute;font-size:14px;font-family:var(--font-mono);color:rgba(255,255,255,0.03);white-space:nowrap;transform:rotate(-30deg);user-select:none}
 .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-100px);z-index:999;padding:12px 24px;border-radius:var(--radius);font-size:13px;font-weight:500;transition:transform .4s ease;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.warn{background:rgba(245,158,11,0.15);border:0.5px solid rgba(245,158,11,0.3);color:var(--warn)}
 .toast.success{background:rgba(16,185,129,0.15);border:0.5px solid rgba(16,185,129,0.3);color:var(--accent)}
 .toast.danger{background:rgba(239,68,68,0.15);border:0.5px solid rgba(239,68,68,0.3);color:var(--danger)}
-
-/* Warning overlay for tab switch */
-.warning-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(3,3,5,0.95);z-index:1001;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:40px}
-.warning-overlay.show{display:flex}
+.disconnect-overlay,.warning-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1001;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:40px}
+.disconnect-overlay{background:rgba(3,3,5,0.95);z-index:1000;gap:16px}
+.disconnect-overlay.show,.warning-overlay.show{display:flex}
+.disconnect-overlay p{font-size:16px;font-weight:500}
+.disconnect-overlay .sub{font-size:13px;color:var(--text-2)}
+.warning-overlay{background:rgba(3,3,5,0.95)}
 .warning-overlay h2{font-family:var(--font-display);font-size:24px;color:var(--danger)}
 .warning-overlay p{font-size:14px;color:var(--text-2);max-width:400px;line-height:1.7}
 .warning-overlay button{padding:12px 32px;border-radius:var(--radius);background:var(--accent);color:#030305;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-body)}
-
-/* LOBBY */
-.section{display:none;width:100%}
-.section.show{display:block}
+.loading-dots{display:flex;justify-content:center;gap:6px}
+.loading-dots span{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:dotPulse 1.2s ease infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+.section{display:none;width:100%}.section.show{display:block}
 .lobby-title{font-family:var(--font-display);font-size:30px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px}
 .lobby-sub{font-size:14px;color:var(--text-2);margin-bottom:32px;line-height:1.7}
 .rule-item{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:0.5px solid var(--border);opacity:0;transform:translateX(-20px)}
@@ -78,14 +81,20 @@ body::-webkit-scrollbar{display:none}
 .pledge-row{display:flex;align-items:center;gap:12px}
 .pledge-check{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
 .pledge-box.checked .pledge-check{background:var(--accent);border-color:var(--accent)}
-.pledge-box.checked .pledge-check::after{content:'✓';color:#030305;font-size:12px;font-weight:700}
+.pledge-box.checked .pledge-check::after{content:'\2713';color:#030305;font-size:12px;font-weight:700}
 .pledge-label{font-size:12px;color:var(--text-2);line-height:1.5}
 .btn-main{width:100%;padding:14px;border-radius:var(--radius);font-size:15px;font-weight:700;font-family:var(--font-display);background:var(--accent);color:#030305;border:none;cursor:pointer;transition:all .3s;letter-spacing:-0.3px}
 .btn-main:disabled{opacity:0.3;cursor:not-allowed}
 .btn-main:not(:disabled):hover{background:var(--accent-light);transform:translateY(-2px);box-shadow:0 0 40px rgba(16,185,129,0.2)}
 .btn-main.show-anim{opacity:0;animation:fadeUp .5s ease forwards}
-
-/* LAYER 1 */
+.cam-request{text-align:center;padding:16px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;opacity:0}
+.cam-request.show{animation:fadeUp .5s ease forwards}
+.cam-request p{font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6}
+.cam-btn{padding:10px 24px;border-radius:var(--radius);font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-body);transition:all .3s}
+.cam-btn-allow{background:var(--accent);color:#030305}
+.cam-status-text{font-size:12px;margin-top:10px;font-weight:500}
+.cam-status-text.granted{color:var(--accent)}
+.cam-status-text.denied{color:var(--danger)}
 .l1-header{margin-bottom:24px}
 .l1-title{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:6px}
 .l1-sub{font-size:13px;color:var(--text-2)}
@@ -113,41 +122,68 @@ body::-webkit-scrollbar{display:none}
 .btn-next{background:var(--accent);color:#030305}
 .btn-next:hover:not(:disabled){background:var(--accent-light);transform:translateY(-1px)}
 .btn-next:disabled{opacity:0.3;cursor:not-allowed}
-
-/* TRANSITION SCREEN */
 .transition-screen{text-align:center}
 .transition-screen h2{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:12px}
 .transition-screen p{font-size:13px;color:var(--text-2);line-height:1.7;margin-bottom:24px}
 .transition-rules{text-align:left;margin-bottom:28px}
 .transition-rule{display:flex;align-items:center;gap:10px;padding:10px 0;font-size:13px;color:var(--text-2)}
 .transition-rule .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
-
-/* LAYER 2 - QUIZ */
-.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.quiz-progress{font-size:12px;color:var(--text-3)}
-.quiz-progress span{color:var(--accent);font-weight:600}
-.quiz-timer{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:100px;border:1px solid var(--border);font-size:14px;font-weight:600;font-family:var(--font-display);transition:all .3s}
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.quiz-progress{font-size:12px;color:var(--text-3)}.quiz-progress span{color:var(--accent);font-weight:600}
+.quiz-timers{display:flex;gap:8px;align-items:center}
+.quiz-timer{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;border:1px solid var(--border);font-size:13px;font-weight:600;font-family:var(--font-display);transition:all .3s}
 .quiz-timer.urgent{border-color:var(--danger);color:var(--danger);animation:timerPulse 1s ease infinite}
-.quiz-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-bottom:28px;overflow:hidden}
+.quiz-timer.q-timer{border-color:rgba(59,130,246,0.3);color:#60a5fa;font-size:11px;padding:5px 10px}
+.quiz-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-bottom:8px;overflow:hidden}
 .quiz-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
-.quiz-card{animation:scaleIn .35s ease}
-.quiz-q-num{font-size:12px;color:var(--text-3);margin-bottom:8px}
-.quiz-question{font-size:17px;font-weight:500;line-height:1.7;margin-bottom:24px}
+.quiz-flag-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.quiz-diff{font-size:11px;padding:4px 10px;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.quiz-diff.easy{background:rgba(16,185,129,0.1);color:var(--accent)}
+.quiz-diff.medium{background:rgba(245,158,11,0.1);color:var(--warn)}
+.quiz-diff.hard{background:rgba(239,68,68,0.1);color:var(--danger)}
+.flag-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text-3);font-size:11px;font-weight:500;cursor:pointer;transition:all .25s;font-family:var(--font-body)}
+.flag-btn:hover{border-color:rgba(245,158,11,0.4);color:var(--warn)}
+.flag-btn.flagged{border-color:var(--warn);color:var(--warn);background:rgba(245,158,11,0.08)}
+.quiz-card{animation:slideInRight .4s ease}
+.quiz-card.exiting{animation:slideOutLeft .3s ease forwards}
+.quiz-question{font-size:16px;font-weight:500;line-height:1.8;margin-bottom:24px}
+.code-block{background:#0d1117;border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:16px 18px;margin:12px 0;font-family:var(--font-mono);font-size:13px;line-height:1.8;color:#e6edf3;overflow-x:auto;white-space:pre;position:relative}
+.code-block::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#3b82f6);border-radius:var(--radius) var(--radius) 0 0}
+.code-block .kw{color:#ff7b72}.code-block .str{color:#a5d6ff}.code-block .fn{color:#d2a8ff}.code-block .num{color:#79c0ff}.code-block .cm{color:#8b949e}
 .quiz-options{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
 .quiz-option{padding:14px 18px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--text-2)}
 .quiz-option:hover{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.02)}
 .quiz-option.selected{border-color:var(--accent);background:var(--accent-dim);color:var(--text-1)}
-.quiz-option-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all .25s}
-.quiz-option.selected .quiz-option-dot{background:var(--accent);border-color:var(--accent)}
+.quiz-option.locked{pointer-events:none;opacity:0.5}
+.quiz-option-label{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text-3);flex-shrink:0}
+.quiz-option.selected .quiz-option-label{background:var(--accent);color:#030305}
 .quiz-submit{width:100%;padding:13px;border-radius:var(--radius);font-size:14px;font-weight:600;font-family:var(--font-body);background:var(--accent);color:#030305;border:none;cursor:pointer;transition:all .3s}
 .quiz-submit:disabled{opacity:0.3;cursor:not-allowed}
 .quiz-submit:not(:disabled):hover{background:var(--accent-light)}
-
 .loading-screen{text-align:center;padding:60px 0}
 .loading-screen p{font-size:15px;color:var(--text-2);margin-bottom:16px}
 .loading-screen .sub{font-size:12px;color:var(--text-3);margin-top:8px}
-
-/* Webcam */
+.review-title{font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:6px}
+.review-sub{font-size:13px;color:var(--text-2);margin-bottom:24px}
+.review-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px}
+.review-cell{width:100%;aspect-ratio:1;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:var(--font-display);cursor:pointer;transition:all .25s;border:1px solid var(--border)}
+.review-cell.answered{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:var(--accent)}
+.review-cell.flagged{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:var(--warn)}
+.review-cell.unanswered{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2);color:var(--danger)}
+.review-cell:hover{transform:scale(1.08)}
+.review-legend{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.review-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3)}
+.review-legend-dot{width:10px;height:10px;border-radius:3px}
+.review-legend-dot.g{background:rgba(16,185,129,0.4)}.review-legend-dot.o{background:rgba(245,158,11,0.4)}.review-legend-dot.r{background:rgba(239,68,68,0.4)}
+.review-list{max-height:200px;overflow-y:auto;scrollbar-width:thin;margin-bottom:24px}
+.review-list-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-2);cursor:pointer;transition:background .2s}
+.review-list-item:hover{background:rgba(255,255,255,0.02)}
+.review-list-item .rnum{font-weight:700;color:var(--text-1);width:24px;flex-shrink:0}
+.review-list-item .rq{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.review-list-item .rstatus{font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;flex-shrink:0}
+.rstatus.answered-s{background:rgba(16,185,129,0.1);color:var(--accent)}
+.rstatus.flagged-s{background:rgba(245,158,11,0.1);color:var(--warn)}
+.rstatus.unanswered-s{background:rgba(239,68,68,0.1);color:var(--danger)}
 .webcam-box{position:fixed;bottom:20px;left:20px;z-index:50;width:160px;height:120px;border-radius:12px;overflow:hidden;border:2px solid var(--border);display:none;background:#000}
 .webcam-box.active{display:block}
 .webcam-box video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
@@ -156,19 +192,41 @@ body::-webkit-scrollbar{display:none}
 .webcam-status.ok{background:rgba(16,185,129,0.8);color:#030305}
 .webcam-status.warn{background:rgba(245,158,11,0.8);color:#030305}
 .webcam-status.danger{background:rgba(239,68,68,0.8);color:#fff}
-@keyframes camPulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.cam-request{text-align:center;padding:16px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;opacity:0}
-.cam-request.show{animation:fadeUp .5s ease forwards}
-.cam-request p{font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6}
-.cam-btn{padding:10px 24px;border-radius:var(--radius);font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:var(--font-body);transition:all .3s}
-.cam-btn-allow{background:var(--accent);color:#030305;margin-right:8px}
-.cam-btn-allow:hover{background:var(--accent-light)}
-.cam-status-text{font-size:12px;margin-top:10px;font-weight:500}
-.cam-status-text.granted{color:var(--accent)}
-.cam-status-text.denied{color:var(--danger)}
-
+.particle-container{position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;pointer-events:none}
+.particle{position:absolute;width:6px;height:6px;border-radius:50%;animation:particleBurst 1.5s ease forwards}
+.score-section{text-align:center;padding:20px 0}
+.score-grade{font-family:var(--font-display);font-size:80px;font-weight:700;margin:20px 0 8px;animation:gradeReveal .8s ease .3s both}
+.score-grade.a{color:var(--accent)}.score-grade.b{color:#3b82f6}.score-grade.c{color:var(--warn)}.score-grade.d,.score-grade.f{color:var(--danger)}
+.score-pct{font-size:18px;color:var(--text-2);margin-bottom:6px;font-weight:500}
+.score-msg{font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:28px;max-width:380px;margin-left:auto;margin-right:auto}
+.score-cats{text-align:left;margin-bottom:24px}
+.score-cat{margin-bottom:16px}
+.score-cat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.score-cat-name{font-size:13px;font-weight:600}
+.score-cat-val{font-size:12px;color:var(--text-3)}
+.score-cat-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.score-cat-fill{height:100%;border-radius:3px;animation:barGrow 1s ease forwards}
+.score-cat-fill.strong{background:var(--accent)}.score-cat-fill.moderate{background:var(--warn)}.score-cat-fill.weak{background:var(--danger)}
+.score-cat-tip{font-size:11px;color:var(--text-3);margin-top:4px;font-style:italic}
+.score-verdict{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:0.5px}
+.score-verdict.strong{background:rgba(16,185,129,0.1);color:var(--accent)}
+.score-verdict.moderate{background:rgba(245,158,11,0.1);color:var(--warn)}
+.score-verdict.weak{background:rgba(239,68,68,0.1);color:var(--danger)}
+.score-insights{text-align:left;margin-bottom:24px;padding:16px;border:1px solid var(--border);border-radius:var(--radius)}
+.score-insights h4{font-size:13px;font-weight:700;margin-bottom:10px;font-family:var(--font-display)}
+.score-insights ul{list-style:none;padding:0}
+.score-insights li{font-size:12px;color:var(--text-2);padding:4px 0;display:flex;align-items:center;gap:8px}
+.score-insights li::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.score-insights.strengths li::before{background:var(--accent)}
+.score-insights.weaknesses li::before{background:var(--danger)}
+.score-next{font-size:13px;color:var(--text-2);line-height:1.7;margin-bottom:24px;padding:14px;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.1);border-radius:var(--radius)}
+.analyzing-screen{text-align:center;padding:60px 0}
+.analyzing-screen h2{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:12px}
+.analyzing-screen p{font-size:13px;color:var(--text-2);margin-bottom:20px}
+.analyzing-bar{width:100%;max-width:300px;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin:0 auto}
+.analyzing-bar-fill{height:100%;background:var(--accent);border-radius:2px;width:0;transition:width .5s ease}
 @media(max-width:900px){.content-wrapper{width:100%;max-width:100%;position:relative;right:0;height:auto;min-height:100vh;padding:120px 24px 40px}#orb-container{position:fixed;opacity:0.2}.logo-mark{top:20px;left:20px}.logo-mark img{width:48px;height:48px}.logo-mark span{font-size:20px}}
-@media(max-width:480px){.content-wrapper{padding:100px 18px 32px}.lobby-title{font-size:24px}.skill-name{font-size:24px}.quiz-question{font-size:15px}.logo-mark{top:16px;left:16px}.logo-mark img{width:40px;height:40px}.logo-mark span{font-size:17px}}
+@media(max-width:480px){.content-wrapper{padding:100px 18px 32px}.lobby-title{font-size:24px}.skill-name{font-size:24px}.quiz-question{font-size:14px}.logo-mark{top:16px;left:16px}.logo-mark img{width:40px;height:40px}.logo-mark span{font-size:17px}.review-grid{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
@@ -176,100 +234,23 @@ body::-webkit-scrollbar{display:none}
 <div id="orb-container"></div>
 <div class="logo-mark"><img src="https://i.ibb.co/nMFjJgcZ/logo-png.png" alt=""><div style="width:1px;height:36px;background:rgba(255,255,255,0.15)"></div><span>Path <span class="acc">Engine</span></span></div>
 <div class="toast" id="toast"></div>
+<div class="watermark" id="watermark"></div>
 <div class="webcam-box" id="webcamBox"><video id="webcamVideo" autoplay playsinline muted></video><div class="webcam-dot"></div><div class="webcam-status ok" id="webcamStatus">Face detected</div></div>
 <canvas id="faceCanvas" style="display:none"></canvas>
 <div class="disconnect-overlay" id="disconnectOverlay"><p>Connection lost</p><p class="sub">Waiting to reconnect...</p><div class="loading-dots"><span></span><span></span><span></span></div></div>
-<div class="warning-overlay" id="warningOverlay"><h2>⚠ Warning</h2><p id="warningMsg">You switched tabs or exited fullscreen. This is your first warning. One more and your quiz will be auto-submitted.</p><button onclick="dismissWarning()">I understand, continue</button></div>
-
-<div class="content-wrapper">
-<div class="content-inner">
-
-<!-- LOBBY -->
-<div class="section show" id="lobbySection">
-<h1 class="lobby-title">Assessment <span style="color:var(--accent)">Lobby</span></h1>
-<p class="lobby-sub">Read the rules before you begin.</p>
-<div id="lobbyRules">
-<div class="rule-item" data-delay="200"><div class="rule-icon g">⏱</div><div class="rule-text"><h4>Timed questions</h4><p>Each quiz question has a countdown (30-60 sec).</p></div></div>
-<div class="rule-item" data-delay="450"><div class="rule-icon r">⚠</div><div class="rule-text"><h4>No tab switching</h4><p>Warning on first switch. Auto-submit on second.</p></div></div>
-<div class="rule-item" data-delay="700"><div class="rule-icon y">🔒</div><div class="rule-text"><h4>Fullscreen mode</h4><p>Quiz runs in fullscreen. You'll be prompted.</p></div></div>
-<div class="rule-item" data-delay="950"><div class="rule-icon b">🔄</div><div class="rule-text"><h4>No going back</h4><p>Quiz questions can't be revisited once answered.</p></div></div>
-<div class="rule-item" data-delay="1200"><div class="rule-icon p">🧠</div><div class="rule-text"><h4>AI-generated questions</h4><p>Unique questions per student. No sharing possible.</p></div></div>
-<div class="rule-item" data-delay="1450"><div class="rule-icon g">📱</div><div class="rule-text"><h4>Refresh = restart</h4><p>Refreshing during quiz starts you over completely.</p></div></div>
-</div>
-<div class="lobby-layers" id="lobbyLayers"><div class="layer-pill on">Self evaluation</div><div class="layer-pill">Skill quiz</div><div class="layer-pill">Goals</div><div class="layer-pill">AI chat</div></div>
-<div class="lobby-time" id="lobbyTime">Estimated time: <span>~15-20 minutes</span></div>
-
-<div class="cam-request" id="camRequest">
-<p>📷 We need camera access to verify your identity during the quiz. This is mandatory.</p>
-<button class="cam-btn cam-btn-allow" onclick="requestCamera()">Allow Camera</button>
-<div class="cam-status-text" id="camStatus"></div>
-</div>
-
-<div class="pledge-box" id="pledgeBox" onclick="togglePledge()"><div class="pledge-row"><div class="pledge-check" id="pledgeCheck"></div><div class="pledge-label">I'll answer honestly — better answers mean a better roadmap built for me.</div></div></div>
-<button class="btn-main show-anim" id="btnStart" disabled onclick="startAssessment()">I'm Ready</button>
-</div>
-
-<!-- LAYER 1 -->
-<div class="section" id="layer1Section">
-<div class="l1-header"><h2 class="l1-title">Rate your skills</h2><p class="l1-sub">Be honest — this helps AI understand where you are.</p></div>
-<div class="l1-progress"><div class="l1-bar"><div class="l1-bar-fill" id="l1BarFill" style="width:0%"></div></div><div class="l1-count"><span id="l1Current">1</span> / <span id="l1Total">8</span></div></div>
-<div id="skillArea"><div class="loading-screen" id="loadingSkills"><p>AI is generating skills for you...</p><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
-</div>
-
-<!-- TRANSITION TO QUIZ -->
-<div class="section" id="transitionSection">
-<div class="transition-screen">
-<h2>Ready for the <span style="color:var(--accent)">Quiz?</span></h2>
-<p>The quiz has 20 AI-generated questions based on your skill ratings. Here's what to expect:</p>
-<div class="transition-rules">
-<div class="transition-rule"><div class="dot"></div>Each question is timed (30-60 seconds)</div>
-<div class="transition-rule"><div class="dot"></div>You can't go back to previous questions</div>
-<div class="transition-rule"><div class="dot"></div>The browser will go fullscreen</div>
-<div class="transition-rule"><div class="dot"></div>Tab switching will trigger a warning</div>
-<div class="transition-rule"><div class="dot"></div>Questions are unique to you</div>
-</div>
-<button class="btn-main" onclick="enterFullscreenAndStartQuiz()">Enter Fullscreen & Start Quiz</button>
-</div>
-</div>
-
-<!-- LAYER 2 - QUIZ -->
-<div class="section" id="quizSection">
-<div class="quiz-header">
-<div class="quiz-progress">Question <span id="qNum">1</span> / <span id="qTotal">20</span></div>
-<div class="quiz-timer" id="quizTimer">⏱ <span id="timerCount">30</span>s</div>
-</div>
-<div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill" style="width:0%"></div></div>
-<div id="quizArea"></div>
-</div>
-
-<!-- QUIZ LOADING -->
-<div class="section" id="quizLoadingSection">
-<div class="loading-screen"><p>AI is generating your personalized quiz...</p><div class="loading-dots"><span></span><span></span><span></span></div><p class="sub">This takes about 10-15 seconds</p></div>
-</div>
-
-<!-- RESTART VIOLATION -->
-<div class="section" id="restartSection">
-<div style="text-align:center;padding:40px 0">
-<h2 style="font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--danger);margin-bottom:12px">⚠ Proctoring Violation</h2>
-<p style="font-size:15px;color:var(--text-2);margin-bottom:8px;line-height:1.7">Reason: <strong id="restartReason" style="color:var(--text-1)"></strong></p>
-<p style="font-size:13px;color:var(--text-3);margin-bottom:28px">Restart <span id="restartNum">1</span> of <span id="restartMax">2</span>. Your quiz will restart with completely new questions.</p>
-<button class="btn-main" onclick="restartQuizWithNewQuestions()" style="background:var(--danger)">Restart Quiz with New Questions</button>
-</div>
-</div>
-
-<!-- QUIZ COMPLETE -->
-<div class="section" id="quizCompleteSection">
-<div style="text-align:center;padding:40px 0">
-<h2 style="font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:12px">Quiz <span style="color:var(--accent)">Complete!</span></h2>
-<p style="font-size:14px;color:var(--text-2);margin-bottom:32px;line-height:1.7">Your responses have been saved. The AI will use this data along with your self-evaluation to build your personalized roadmap.</p>
-<button class="btn-main" onclick="goToLayer3()">Continue to Goals & Preferences →</button>
-</div>
-</div>
-
-</div>
-</div>
-</div>
-
+<div class="warning-overlay" id="warningOverlay"><h2>&#9888; Warning</h2><p id="warningMsg">You switched tabs. This is your first warning.</p><button onclick="dismissWarning()">I understand, continue</button></div>
+<div class="particle-container" id="particleContainer"></div>
+<div class="content-wrapper"><div class="content-inner">
+<div class="section show" id="lobbySection"><h1 class="lobby-title">Assessment <span style="color:var(--accent)">Lobby</span></h1><p class="lobby-sub">Read the rules carefully before you begin.</p><div id="lobbyRules"><div class="rule-item" data-delay="200"><div class="rule-icon g">&#9201;</div><div class="rule-text"><h4>Timed questions</h4><p>Each question has its own countdown + overall 25 min timer.</p></div></div><div class="rule-item" data-delay="400"><div class="rule-icon r">&#128274;</div><div class="rule-text"><h4>Fullscreen + locked</h4><p>Quiz runs in fullscreen. Escape key is blocked.</p></div></div><div class="rule-item" data-delay="600"><div class="rule-icon y">&#9888;</div><div class="rule-text"><h4>No tab switching</h4><p>Warning on first switch. Auto-submit on second.</p></div></div><div class="rule-item" data-delay="800"><div class="rule-icon b">&#128260;</div><div class="rule-text"><h4>No going back</h4><p>Once answered, questions are locked. Flag to review at the end.</p></div></div><div class="rule-item" data-delay="1000"><div class="rule-icon p">&#129504;</div><div class="rule-text"><h4>AI-generated &amp; unique</h4><p>Every student gets different questions. No sharing possible.</p></div></div><div class="rule-item" data-delay="1200"><div class="rule-icon g">&#128247;</div><div class="rule-text"><h4>Face detection active</h4><p>Camera required. Multiple faces = instant restart.</p></div></div></div><div class="lobby-layers" id="lobbyLayers"><div class="layer-pill on">Self evaluation</div><div class="layer-pill">Skill quiz</div><div class="layer-pill">Goals</div><div class="layer-pill">AI chat</div></div><div class="lobby-time" id="lobbyTime">Estimated time: <span>~15-20 minutes</span></div><div class="cam-request" id="camRequest"><p>&#128247; Camera access is <strong>mandatory</strong> for identity verification.</p><button class="cam-btn cam-btn-allow" onclick="requestCamera()">Allow Camera</button><div class="cam-status-text" id="camStatus"></div></div><div class="pledge-box" id="pledgeBox" onclick="togglePledge()"><div class="pledge-row"><div class="pledge-check" id="pledgeCheck"></div><div class="pledge-label">I'll answer honestly &#8212; better answers mean a better roadmap for me.</div></div></div><button class="btn-main show-anim" id="btnStart" disabled onclick="startAssessment()">I'm Ready</button></div>
+<div class="section" id="layer1Section"><div class="l1-header"><h2 class="l1-title">Rate your skills</h2><p class="l1-sub">Be honest &#8212; this helps AI understand where you are.</p></div><div class="l1-progress"><div class="l1-bar"><div class="l1-bar-fill" id="l1BarFill" style="width:0%"></div></div><div class="l1-count"><span id="l1Current">1</span> / <span id="l1Total">8</span></div></div><div id="skillArea"><div class="loading-screen" id="loadingSkills"><p>AI is generating skills for you...</p><div class="loading-dots"><span></span><span></span><span></span></div></div></div></div>
+<div class="section" id="transitionSection"><div class="transition-screen"><h2>Ready for the <span style="color:var(--accent)">Quiz?</span></h2><p>20 AI-generated questions based on your skill ratings:</p><div class="transition-rules"><div class="transition-rule"><div class="dot"></div>Each question has its own timer (30-60s)</div><div class="transition-rule"><div class="dot"></div>You can't go back &#8212; but you can flag for review</div><div class="transition-rule"><div class="dot"></div>Review screen appears after all 20 questions</div><div class="transition-rule"><div class="dot"></div>Browser enters fullscreen &#8212; Escape blocked</div><div class="transition-rule"><div class="dot"></div>Right-click and DevTools disabled</div><div class="transition-rule"><div class="dot"></div>Your name is watermarked on screen</div></div><button class="btn-main" onclick="enterFullscreenAndStartQuiz()">Enter Fullscreen &amp; Start Quiz</button></div></div>
+<div class="section" id="quizSection"><div class="quiz-header"><div class="quiz-progress">Question <span id="qNum">1</span> / <span id="qTotal">20</span></div><div class="quiz-timers"><div class="quiz-timer q-timer" id="qTimer">Q: <span id="qTimerCount">45</span>s</div><div class="quiz-timer" id="quizTimer">&#9201; <span id="timerCount">25:00</span></div></div></div><div class="quiz-bar"><div class="quiz-bar-fill" id="quizBarFill" style="width:0%"></div></div><div id="quizArea"></div></div>
+<div class="section" id="quizLoadingSection"><div class="loading-screen"><p>AI is generating your personalized quiz...</p><div class="loading-dots"><span></span><span></span><span></span></div><p class="sub">This takes about 10-15 seconds</p></div></div>
+<div class="section" id="reviewSection"><h2 class="review-title">Review your <span style="color:var(--accent)">answers</span></h2><p class="review-sub">Click any flagged or unanswered question to answer it. Answered = locked.</p><div class="review-legend"><div class="review-legend-item"><div class="review-legend-dot g"></div>Answered</div><div class="review-legend-item"><div class="review-legend-dot o"></div>Flagged</div><div class="review-legend-item"><div class="review-legend-dot r"></div>Unanswered</div></div><div class="review-grid" id="reviewGrid"></div><div class="review-list" id="reviewList"></div><div class="review-actions"><button class="btn-main" onclick="submitFromReview()">Submit Quiz</button></div></div>
+<div class="section" id="restartSection"><div style="text-align:center;padding:40px 0"><h2 style="font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--danger);margin-bottom:12px">&#9888; Proctoring Violation</h2><p style="font-size:15px;color:var(--text-2);margin-bottom:8px;line-height:1.7">Reason: <strong id="restartReason" style="color:var(--text-1)"></strong></p><p style="font-size:13px;color:var(--text-3);margin-bottom:28px">Restart <span id="restartNum">1</span> of <span id="restartMax">2</span>. New questions generated.</p><button class="btn-main" onclick="restartQuizWithNewQuestions()" style="background:var(--danger)">Restart Quiz with New Questions</button></div></div>
+<div class="section" id="analyzingSection"><div class="analyzing-screen"><h2>AI is analyzing your <span style="color:var(--accent)">results</span></h2><p>Generating your personalized score breakdown...</p><div class="analyzing-bar"><div class="analyzing-bar-fill" id="analyzeBarFill"></div></div></div></div>
+<div class="section" id="scoreSection"><div class="score-section" id="scoreContent"></div></div>
+</div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/supabase-client.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
@@ -277,356 +258,6 @@ body::-webkit-scrollbar{display:none}
 <script>
 (function(){var c=document.getElementById('orb-container');var r=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setSize(window.innerWidth,window.innerHeight);r.setPixelRatio(Math.min(window.devicePixelRatio,2));r.setClearColor(0x030305,1);c.appendChild(r.domElement);var fs=14,asp=window.innerWidth/window.innerHeight;var cam=new THREE.OrthographicCamera(-fs*asp/2,fs*asp/2,fs/2,-fs/2,0.1,100);cam.position.z=20;var sc=new THREE.Scene();var R=6.8,N=5500;var bp=new Float32Array(N*3),cp=new Float32Array(N*3),al=new Float32Array(N),sz=new Float32Array(N);var g=(1+Math.sqrt(5))/2;for(var i=0;i<N;i++){var t=2*Math.PI*i/g,p=Math.acos(1-2*(i+0.5)/N);bp[i*3]=R*Math.cos(t)*Math.sin(p);bp[i*3+1]=R*Math.sin(t)*Math.sin(p);bp[i*3+2]=R*Math.cos(p);cp[i*3]=bp[i*3];cp[i*3+1]=bp[i*3+1];cp[i*3+2]=bp[i*3+2];var eq=Math.abs(p-Math.PI/2)/(Math.PI/2);al[i]=(0.18+Math.random()*0.5)*Math.max(0.06,1-Math.pow(eq,1.4)*0.9);sz[i]=2.6*(0.6+Math.random()*0.4)}var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(cp,3));geo.setAttribute('alpha',new THREE.BufferAttribute(al,1));geo.setAttribute('size',new THREE.BufferAttribute(sz,1));var mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:false,uniforms:{uTime:{value:0}},vertexShader:'attribute float alpha;attribute float size;varying float vAlpha;varying float vZ;uniform float uTime;void main(){vAlpha=alpha;vec3 pos=position;float breath=sin(uTime*0.2+pos.x+pos.y*1.5+pos.z*1.2)*0.015;pos*=1.0+breath;vec4 mv=modelViewMatrix*vec4(pos,1.0);vZ=pos.z;gl_PointSize=size*1.8;gl_Position=projectionMatrix*mv;}',fragmentShader:'varying float vAlpha;varying float vZ;void main(){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;float edge=1.0-smoothstep(0.25,0.5,d);float zFade=smoothstep(-6.8,4.5,vZ);float a=vAlpha*edge*(0.04+zFade*0.76);gl_FragColor=vec4(1.0,1.0,1.0,a);}'});var sph=new THREE.Points(geo,mat);sc.add(sph);function eX(){return fs*asp/2}sph.position.x=-eX()*0.35;sph.scale.setScalar(1.1);var mN=new THREE.Vector2(-10,-10),mW=new THREE.Vector3(-10,-10,0),rmx=-10,rmy=-10;window.addEventListener('mousemove',function(e){rmx=(e.clientX/window.innerWidth)*2-1;rmy=-(e.clientY/window.innerHeight)*2+1});function gms(){var mx=mN.x*eX(),my=mN.y*(fs/2),lx=(mx-sph.position.x)/1.1,ly=(my-sph.position.y)/1.1,d2=lx*lx+ly*ly;if(d2>R*R){mW.set(lx,ly,0);return}mW.set(lx,ly,Math.sqrt(R*R-d2))}var ry=0;function anim(time){var ti=time*0.001;mat.uniforms.uTime.value=ti;ry+=0.0004;sph.rotation.y=ry;sph.rotation.x=Math.sin(ti*0.08)*0.03;mN.x+=(rmx-mN.x)*0.4;mN.y+=(rmy-mN.y)*0.4;gms();for(var i=0;i<N;i++){var bx=bp[i*3],by=bp[i*3+1],bz=bp[i*3+2],dx=bx-mW.x,dy=by-mW.y,dz=bz-mW.z,dist=Math.sqrt(dx*dx+dy*dy+dz*dz),tx=bx,ty=by,tz=bz;if(dist<2&&dist>0.01){var t2=dist/2,f=(1-t2)*(1-t2)*0.55;if(f>0.8)f=0.8;tx=bx+(dx/dist)*f;ty=by+(dy/dist)*f;tz=bz+(dz/dist)*f}cp[i*3]+=(tx-cp[i*3])*0.1;cp[i*3+1]+=(ty-cp[i*3+1])*0.1;cp[i*3+2]+=(tz-cp[i*3+2])*0.1}geo.attributes.position.needsUpdate=true;r.render(sc,cam);requestAnimationFrame(anim)}anim(0);window.addEventListener('resize',function(){asp=window.innerWidth/window.innerHeight;cam.left=-fs*asp/2;cam.right=fs*asp/2;cam.top=fs/2;cam.bottom=-fs/2;cam.updateProjectionMatrix();r.setSize(window.innerWidth,window.innerHeight);sph.position.x=-eX()*0.35})})();
 </script>
-<script>
-var currentUser=null,userDomain='',userEdu='',skills=[],ratings={},currentSkillIdx=0,pledgeChecked=false;
-var questions=[],currentQIdx=0,answers={},quizTimer=null,timeLeft=0,tabWarnings=0,quizActive=false;
-var behaviorLog=[];
-var questionStartTime=0;
-var mouseLeaveCount=0;
-var cameraGranted=false;
-var webcamStream=null;
-var faceDetectionInterval=null;
-var noFaceCount=0;
-var multiFaceCount=0;
-var noFaceStreak=0;
-var faceWarningGiven=false;
-var faceApiLoaded=false;
-var restartCount=0;
-var maxRestarts=2;
-var levels=[{value:1,label:'Never heard of it'},{value:2,label:'Heard of it, never used'},{value:3,label:'Know the basics'},{value:4,label:'Comfortable using it'},{value:5,label:'Can teach others'}];
-
-// Shuffle options and update correct index
-function shuffleOptions(q){
-  var opts=q.options.map(function(o,i){return{text:o,wasCorrect:i===q.correct}});
-  for(var i=opts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var temp=opts[i];opts[i]=opts[j];opts[j]=temp}
-  q.options=opts.map(function(o){return o.text});
-  q.correct=opts.findIndex(function(o){return o.wasCorrect});
-  return q;
-}
-
-// Behavior analysis - generates confidence score
-function analyzeBehavior(){
-  var flags=[];var confidenceScore=100;
-  
-  // Check 1: Too fast answers on hard questions
-  var fastHardCount=0;
-  behaviorLog.filter(function(l){return l.event==='answer_submitted'}).forEach(function(l){
-    var q=questions[l.question-1];
-    if(q&&q.difficulty==='hard'){
-      var timeTaken=q.time-l.timeRemaining;
-      if(timeTaken<5){fastHardCount++;flags.push('Answered hard Q'+l.question+' in '+timeTaken+'s')}
-    }
-  });
-  if(fastHardCount>=3){confidenceScore-=25;flags.push('Multiple hard questions answered suspiciously fast')}
-  
-  // Check 2: All same position selected
-  var positions={};
-  Object.values(answers).forEach(function(a){positions[a]=(positions[a]||0)+1});
-  var maxSamePos=Math.max.apply(null,Object.values(positions));
-  if(maxSamePos>=15){confidenceScore-=20;flags.push('Same option position selected '+maxSamePos+'/20 times')}
-  
-  // Check 3: Tab switches
-  if(tabWarnings>=1){confidenceScore-=15*tabWarnings;flags.push(tabWarnings+' tab switch warning(s)')}
-  
-  // Check 4: Mouse left browser frequently
-  if(mouseLeaveCount>=5){confidenceScore-=10;flags.push('Mouse left browser '+mouseLeaveCount+' times')}
-  
-  // Check 5: Self-rated high but scored low
-  var highRatedSkills=Object.entries(ratings).filter(function(e){return e[1]>=4}).length;
-  var score=0;questions.forEach(function(q,i){if(answers[i]===q.correct)score++});
-  var scorePercent=Math.round((score/questions.length)*100);
-  if(highRatedSkills>=4&&scorePercent<30){confidenceScore-=15;flags.push('Self-rated high but scored '+scorePercent+'%')}
-  
-  // Check 6: Scored perfect but self-rated low
-  var lowRatedSkills=Object.entries(ratings).filter(function(e){return e[1]<=2}).length;
-  if(lowRatedSkills>=4&&scorePercent>90){confidenceScore-=10;flags.push('Self-rated low but scored '+scorePercent+'%')}
-  
-  // Check 7: Face not detected frequently
-  if(noFaceCount>=10){confidenceScore-=15;flags.push('Face not detected '+noFaceCount+' times')}
-  else if(noFaceCount>=5){confidenceScore-=8;flags.push('Face absent '+noFaceCount+' times')}
-  
-  // Check 8: Multiple faces detected
-  if(multiFaceCount>0){confidenceScore-=25;flags.push('Multiple faces detected '+multiFaceCount+' time(s)')}
-  
-  // Check 9: Quiz was restarted
-  if(restartCount>0){confidenceScore-=15*restartCount;flags.push('Quiz restarted '+restartCount+' time(s) due to violations')}
-  
-  // Check 10: Camera not granted
-  if(!cameraGranted){confidenceScore-=20;flags.push('Camera permission denied')}
-  
-  if(confidenceScore<0)confidenceScore=0;
-  if(confidenceScore>100)confidenceScore=100;
-  
-  return{confidenceScore:confidenceScore,flags:flags};
-}
-
-document.addEventListener('contextmenu',function(e){e.preventDefault()});
-document.addEventListener('keydown',function(e){if(e.ctrlKey&&'cvasCVAS'.indexOf(e.key)!==-1)e.preventDefault();if(e.key==='F12')e.preventDefault();if(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j'))e.preventDefault()});
-window.addEventListener('offline',function(){document.getElementById('disconnectOverlay').classList.add('show');if(quizTimer)clearInterval(quizTimer)});
-window.addEventListener('online',function(){document.getElementById('disconnectOverlay').classList.remove('show');if(quizActive)startTimer(timeLeft)});
-
-// Mouse leave detection - tracks when cursor leaves the browser window
-document.addEventListener('mouseleave',function(){
-  if(!quizActive)return;
-  mouseLeaveCount++;
-  behaviorLog.push({event:'mouse_leave',question:currentQIdx+1,count:mouseLeaveCount,time:new Date().toISOString()});
-});
-
-// Camera request
-async function requestCamera(){
-  var status=document.getElementById('camStatus');
-  try{
-    webcamStream=await navigator.mediaDevices.getUserMedia({video:{width:320,height:240,facingMode:'user'},audio:false});
-    document.getElementById('webcamVideo').srcObject=webcamStream;
-    cameraGranted=true;
-    status.textContent='✓ Camera granted. Loading face detection...';
-    status.className='cam-status-text granted';
-    await loadFaceApi();
-    checkStartReady();
-  }catch(err){
-    cameraGranted=false;
-    status.textContent='✗ Camera denied — camera is REQUIRED';
-    status.className='cam-status-text denied';
-  }
-}
-
-function showWebcam(){if(!cameraGranted)return;document.getElementById('webcamBox').classList.add('active');startFaceDetection()}
-function hideWebcam(){document.getElementById('webcamBox').classList.remove('active');stopFaceDetection()}
-
-async function loadFaceApi(){
-  var status=document.getElementById('camStatus');
-  try{
-    await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights');
-    faceApiLoaded=true;
-    status.textContent='✓ Camera ready. Face detection loaded.';
-    status.className='cam-status-text granted';
-  }catch(err){
-    console.log('Face API load error:',err);
-    status.textContent='✓ Camera ready (basic mode)';
-    status.className='cam-status-text granted';
-  }
-}
-
-function startFaceDetection(){
-  var video=document.getElementById('webcamVideo');
-  faceDetectionInterval=setInterval(async function(){
-    if(!quizActive)return;
-    var statusEl=document.getElementById('webcamStatus');
-    if(faceApiLoaded){
-      try{
-        var detections=await faceapi.detectAllFaces(video,new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.4}));
-        var fc=detections.length;
-        if(fc===1){noFaceStreak=0;faceWarningGiven=false;statusEl.textContent='Face detected';statusEl.className='webcam-status ok'}
-        else if(fc===0){
-          noFaceStreak++;noFaceCount++;
-          behaviorLog.push({event:'no_face',question:currentQIdx+1,streak:noFaceStreak,time:new Date().toISOString()});
-          if(noFaceStreak>=3&&!faceWarningGiven){faceWarningGiven=true;statusEl.textContent='WARNING!';statusEl.className='webcam-status danger';showToast('⚠ Face not detected! Stay in front of camera. Next = test restart.','danger')}
-          else if(noFaceStreak>=6&&faceWarningGiven){statusEl.textContent='VIOLATION!';statusEl.className='webcam-status danger';handleProctorViolation('Face not detected for too long')}
-          else{statusEl.textContent='No face!';statusEl.className='webcam-status danger'}
-        }else if(fc>=2){
-          multiFaceCount++;
-          behaviorLog.push({event:'multiple_faces',question:currentQIdx+1,count:fc,time:new Date().toISOString()});
-          statusEl.textContent='MULTIPLE FACES!';statusEl.className='webcam-status danger';
-          handleProctorViolation('Multiple faces detected ('+fc+' faces) — ZERO TOLERANCE');
-        }
-      }catch(err){console.log('Face detect err:',err)}
-    }else{
-      var canvas=document.getElementById('faceCanvas');var ctx=canvas.getContext('2d');canvas.width=320;canvas.height=240;
-      ctx.drawImage(video,0,0,320,240);var id=ctx.getImageData(80,40,160,160);var px=id.data;var bp=0;var tp=px.length/4;
-      for(var i=0;i<px.length;i+=4){if((px[i]+px[i+1]+px[i+2])/3>60)bp++}
-      if(bp/tp>0.15){noFaceStreak=0;faceWarningGiven=false;statusEl.textContent='Face detected';statusEl.className='webcam-status ok'}
-      else{noFaceStreak++;noFaceCount++;
-        if(noFaceStreak>=3&&!faceWarningGiven){faceWarningGiven=true;showToast('⚠ Stay in front of the camera!','danger')}
-        else if(noFaceStreak>=6&&faceWarningGiven){handleProctorViolation('Face not detected')}
-        statusEl.textContent='No face!';statusEl.className='webcam-status danger'}
-    }
-  },2000);
-}
-
-function handleProctorViolation(reason){
-  restartCount++;
-  behaviorLog.push({event:'proctor_violation',reason:reason,restartCount:restartCount,time:new Date().toISOString()});
-  if(restartCount>maxRestarts){showToast('Max violations exceeded. Quiz auto-submitted.','danger');autoSubmitQuiz();return}
-  quizActive=false;if(quizTimer)clearInterval(quizTimer);stopFaceDetection();
-  showSection('restartSection');
-  document.getElementById('restartReason').textContent=reason;
-  document.getElementById('restartNum').textContent=restartCount;
-  document.getElementById('restartMax').textContent=maxRestarts;
-}
-
-async function restartQuizWithNewQuestions(){
-  showSection('quizLoadingSection');
-  document.querySelector('#quizLoadingSection .loading-screen p').textContent='Generating new questions (restart '+restartCount+'/'+maxRestarts+')...';
-  questions=[];currentQIdx=0;answers={};noFaceStreak=0;faceWarningGiven=false;
-  await generateQuiz();
-}
-
-function stopFaceDetection(){if(faceDetectionInterval){clearInterval(faceDetectionInterval);faceDetectionInterval=null}}
-function stopWebcam(){hideWebcam();if(webcamStream){webcamStream.getTracks().forEach(function(t){t.stop()});webcamStream=null}}
-function checkStartReady(){var ready=pledgeChecked&&cameraGranted;document.getElementById('btnStart').disabled=!ready}
-
-// Tab switch detection
-document.addEventListener('visibilitychange',function(){
-  if(!quizActive)return;
-  if(document.hidden){
-    tabWarnings++;
-    behaviorLog.push({event:'tab_switch',question:currentQIdx+1,time:new Date().toISOString()});
-    if(tabWarnings>=2){autoSubmitQuiz();return}
-    document.getElementById('warningMsg').textContent='You switched tabs! This is warning '+tabWarnings+' of 2. One more and your quiz will be auto-submitted.';
-    document.getElementById('warningOverlay').classList.add('show');
-  }
-});
-
-// Fullscreen exit detection
-document.addEventListener('fullscreenchange',function(){
-  if(!quizActive)return;
-  if(!document.fullscreenElement){
-    tabWarnings++;
-    behaviorLog.push({event:'fullscreen_exit',question:currentQIdx+1,time:new Date().toISOString()});
-    if(tabWarnings>=2){autoSubmitQuiz();return}
-    document.getElementById('warningMsg').textContent='You exited fullscreen! This is warning '+tabWarnings+' of 2. One more and your quiz will be auto-submitted.';
-    document.getElementById('warningOverlay').classList.add('show');
-  }
-});
-
-function dismissWarning(){
-  document.getElementById('warningOverlay').classList.remove('show');
-  try{document.documentElement.requestFullscreen()}catch(e){}
-}
-
-function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(function(){t.classList.remove('show')},3000)}
-function showSection(id){document.querySelectorAll('.section').forEach(function(s){s.classList.remove('show')});document.getElementById(id).classList.add('show')}
-
-// LOBBY
-function animateLobby(){var rules=document.querySelectorAll('.rule-item');rules.forEach(function(r){var d=parseInt(r.getAttribute('data-delay'));setTimeout(function(){r.classList.add('show')},d)});setTimeout(function(){document.getElementById('lobbyLayers').classList.add('show')},1800);setTimeout(function(){document.getElementById('lobbyTime').classList.add('show')},2100);setTimeout(function(){document.getElementById('camRequest').classList.add('show')},2400);setTimeout(function(){document.getElementById('pledgeBox').classList.add('show')},2800);setTimeout(function(){document.getElementById('btnStart').classList.add('show')},3200)}
-function togglePledge(){pledgeChecked=!pledgeChecked;document.getElementById('pledgeBox').classList.toggle('checked',pledgeChecked);checkStartReady()}
-async function startAssessment(){showSection('layer1Section');await generateSkills()}
-
-// LAYER 1
-async function generateSkills(){document.getElementById('loadingSkills').style.display='block';try{var response=await fetch('/api/generate-skills',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:userDomain,education:userEdu})});var data=await response.json();if(data.skills&&data.skills.length>0)skills=data.skills;else skills=getFallbackSkills(userDomain)}catch(err){skills=getFallbackSkills(userDomain)}document.getElementById('l1Total').textContent=skills.length;showSkill(0)}
-function getFallbackSkills(domain){var map={'Web Development':['HTML','CSS','JavaScript','React/Vue/Angular','Node.js','REST APIs','Git','SQL'],'AI & Machine Learning':['Python','Linear Algebra','Statistics','Supervised Learning','Neural Networks','Data Preprocessing','TensorFlow/PyTorch','Model Evaluation'],'Data Science':['Python/R','Statistics','Data Cleaning','SQL','Data Visualization','Pandas/NumPy','ML Basics','Data Storytelling'],'Cybersecurity':['Networking','Linux','Cryptography','Web Security','Firewalls','Ethical Hacking','Risk Assessment','Incident Response'],'UI/UX Design':['Figma','Color Theory','Typography','Wireframing','Prototyping','User Research','Design Systems','Responsive Design'],'Competitive Programming':['Arrays & Strings','Linked Lists','Trees & Graphs','Dynamic Programming','Sorting','Time Complexity','Recursion','Greedy']};return map[domain]||['Problem Solving','Critical Thinking','Technical Writing','Research','Communication','Project Management','Time Management','Collaboration']}
-
-function showSkill(idx){
-  currentSkillIdx=idx;var area=document.getElementById('skillArea');
-  var loadEl=document.getElementById('loadingSkills');if(loadEl)loadEl.style.display='none';
-  var skillName=skills[idx];var existingRating=ratings[skillName]||0;
-  document.getElementById('l1BarFill').style.width=Math.round((idx/skills.length)*100)+'%';
-  document.getElementById('l1Current').textContent=idx+1;
-  var html='<div class="skill-card"><p class="skill-label">Skill '+(idx+1)+' of '+skills.length+'</p><h2 class="skill-name">'+skillName+'</h2><div class="level-options">';
-  for(var i=0;i<levels.length;i++){html+='<div class="level-option'+(existingRating===levels[i].value?' selected':'')+'" onclick="selectLevel('+levels[i].value+',this)"><div class="level-dot"></div><div class="level-text">'+levels[i].label+'</div></div>'}
-  html+='</div><div class="l1-nav"><button class="btn-prev" onclick="prevSkill()"'+(idx===0?' disabled':'')+'>← Back</button>';
-  html+=idx===skills.length-1?'<button class="btn-next" id="btnNext" onclick="finishLayer1()"'+(existingRating?'':' disabled')+'>Complete →</button>':'<button class="btn-next" id="btnNext" onclick="nextSkill()"'+(existingRating?'':' disabled')+'>Next →</button>';
-  html+='</div></div>';area.innerHTML=html;
-}
-function selectLevel(val,el){ratings[skills[currentSkillIdx]]=val;document.querySelectorAll('.level-option').forEach(function(o){o.classList.remove('selected')});el.classList.add('selected');document.getElementById('btnNext').disabled=false}
-function nextSkill(){if(currentSkillIdx<skills.length-1)showSkill(currentSkillIdx+1)}
-function prevSkill(){if(currentSkillIdx>0)showSkill(currentSkillIdx-1)}
-
-async function finishLayer1(){
-  var allRated=true;skills.forEach(function(s){if(!ratings[s])allRated=false});
-  if(!allRated){showToast('Please rate all skills before continuing.','warn');return}
-  var btn=document.getElementById('btnNext');btn.disabled=true;btn.textContent='Saving...';
-  try{await supabaseClient.from('assessment_responses').insert({user_id:currentUser.id,layer:'self_evaluation',response_data:ratings,created_at:new Date().toISOString()})}catch(err){}
-  document.getElementById('l1BarFill').style.width='100%';
-  showSection('transitionSection');
-}
-
-// TRANSITION TO QUIZ
-async function enterFullscreenAndStartQuiz(){
-  try{await document.documentElement.requestFullscreen()}catch(e){}
-  showSection('quizLoadingSection');
-  await generateQuiz();
-}
-
-// LAYER 2 - QUIZ
-async function generateQuiz(){
-  try{
-    var response=await fetch('/api/generate-quiz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:userDomain,education:userEdu,selfRatings:ratings})});
-    var data=await response.json();
-    if(data.questions&&data.questions.length>0){questions=data.questions.map(function(q){return shuffleOptions(q)})}else{showToast('Failed to generate quiz. Please try again.','danger');return}
-  }catch(err){showToast('Error generating quiz.','danger');return}
-  document.getElementById('qTotal').textContent=questions.length;
-  currentQIdx=0;answers={};quizActive=true;
-  showWebcam();
-  showSection('quizSection');
-  showQuestion(0);
-}
-
-function showQuestion(idx){
-  currentQIdx=idx;var q=questions[idx];var area=document.getElementById('quizArea');
-  document.getElementById('qNum').textContent=idx+1;
-  document.getElementById('quizBarFill').style.width=Math.round((idx/questions.length)*100)+'%';
-  var html='<div class="quiz-card"><p class="quiz-q-num">Question '+(idx+1)+'</p><p class="quiz-question">'+q.question+'</p><div class="quiz-options">';
-  for(var i=0;i<q.options.length;i++){html+='<div class="quiz-option" onclick="selectQuizOption('+i+',this)"><div class="quiz-option-dot"></div><span>'+q.options[i]+'</span></div>'}
-  html+='</div><button class="quiz-submit" id="quizSubmitBtn" disabled onclick="submitAnswer()">Submit & Next →</button></div>';
-  area.innerHTML=html;
-  behaviorLog.push({event:'question_shown',question:idx+1,time:new Date().toISOString()});
-  questionStartTime=Date.now();
-  startTimer(q.time||45);
-}
-
-function selectQuizOption(idx,el){
-  answers[currentQIdx]=idx;
-  document.querySelectorAll('.quiz-option').forEach(function(o){o.classList.remove('selected')});
-  el.classList.add('selected');
-  document.getElementById('quizSubmitBtn').disabled=false;
-}
-
-function startTimer(seconds){
-  if(quizTimer)clearInterval(quizTimer);
-  timeLeft=seconds;
-  var timerEl=document.getElementById('timerCount');
-  var timerBox=document.getElementById('quizTimer');
-  timerEl.textContent=timeLeft;
-  timerBox.classList.remove('urgent');
-  quizTimer=setInterval(function(){
-    timeLeft--;timerEl.textContent=timeLeft;
-    if(timeLeft<=10)timerBox.classList.add('urgent');
-    if(timeLeft<=0){clearInterval(quizTimer);submitAnswer()}
-  },1000);
-}
-
-function submitAnswer(){
-  if(quizTimer)clearInterval(quizTimer);
-  var q=questions[currentQIdx];
-  behaviorLog.push({event:'answer_submitted',question:currentQIdx+1,selected:answers[currentQIdx]!==undefined?answers[currentQIdx]:-1,correct:q.correct,timeRemaining:timeLeft,time:new Date().toISOString()});
-  if(currentQIdx<questions.length-1){showQuestion(currentQIdx+1)}
-  else{finishQuiz()}
-}
-
-async function finishQuiz(){
-  quizActive=false;
-  if(quizTimer)clearInterval(quizTimer);
-  stopWebcam();
-  try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
-  var score=0;
-  questions.forEach(function(q,i){if(answers[i]===q.correct)score++});
-  var analysis=analyzeBehavior();
-  try{await supabaseClient.from('assessment_responses').insert({user_id:currentUser.id,layer:'skill_quiz',response_data:{answers:answers,score:score,total:questions.length,tabWarnings:tabWarnings,mouseLeaves:mouseLeaveCount,noFaceEvents:noFaceCount,multiFaceEvents:multiFaceCount,restartCount:restartCount,confidenceScore:analysis.confidenceScore,flags:analysis.flags,behaviorLog:behaviorLog},created_at:new Date().toISOString()})}catch(err){}
-  showSection('quizCompleteSection');
-}
-
-async function autoSubmitQuiz(){
-  showToast('Quiz auto-submitted due to violations.','danger');
-  await finishQuiz();
-}
-
-function goToLayer3(){
-  showToast('Layer 3 (Goals & Preferences) coming soon!','success');
-}
-
-// INIT
-(async function(){
-  var session=await getSession();
-  if(!session){window.location.href='/pages/auth.html';return}
-  currentUser=session.user;
-  var res1=await supabaseClient.from('profiles').select('domain').eq('id',currentUser.id).single();
-  userDomain=res1.data?res1.data.domain:'';
-  var res2=await supabaseClient.from('academic_profiles').select('education_level').eq('user_id',currentUser.id).single();
-  userEdu=res2.data?res2.data.education_level:'';
-  if(!userDomain){window.location.href='/pages/academic-profile.html';return}
-  animateLobby();
-})();
-</script>
+<script src="/js/assessment-logic.js"></script>
 </body>
 </html>
